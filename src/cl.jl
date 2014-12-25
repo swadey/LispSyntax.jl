@@ -1,6 +1,6 @@
 module cl
 using PEGParser
-export init_read_table, read, repl
+export init_read_table, read, codegen, @lisp, repl
 
 # package code goes here
 const prompt = "cl>"
@@ -76,6 +76,65 @@ function read(input)
     #println("ast: " * string(clean))
     return clean
   end
+end
+
+function quasiquote(s)
+  if isa(s, Array) && length(s) == 2 && s[1] == :splice
+    Expr(:escape, codegen(s[2]))
+  elseif isa(s, Array) && length(s) == 2 && s[1] == :splice_seq
+    :($(esc(codegen(s[2])))...)
+  elseif isa(s, Array)
+    map(quasiquote, s)
+  else
+    s
+  end
+end
+
+function codegen(s)
+  if isa(s, Symbol)
+    esc(s)
+  elseif !isa(s, Array) # constant
+    s
+  elseif length(s) == 0 # empty array
+    s
+  elseif s[1] == :if
+    if length(s) == 3
+      :($(codegen(s[2])) && $(codegen(s[3])))
+    elseif length(s) == 4
+      :($(codegen(s[2])) ? $(codegen(s[3])) : $(codegen(s[4])))
+    else
+      throw("illegal if statement $s")
+    end
+  elseif s[1] == :lambda
+    assert(length(s) == 3)
+    Expr(:function, Expr(:tuple, s[2]...), codegen(s[3]))
+  elseif s[1] == :def
+    assert(length(s) == 3)
+    :($(s[2]) = $(codegen(s[3])))
+  elseif s[1] == :quote
+    s[2]
+  # elseif s[1] == :splice
+  # elseif s[1] == :splice_seq
+  elseif s[1] == :quasi
+    #Expr(:quasi, codegen(s[2]))
+    quasiquote(s[2]) #-- shit, wrong scope when quasiquote calls eval
+  elseif s[1] == :defn
+    # Note: julia's lambdas are not optimized yet, so we don't define defn as a macro.
+    #       this should be revisited later.
+  elseif s[1] == :macro
+  elseif s[1] == :paste
+  elseif s[1] == :defmethod
+  else
+    coded_s = map(codegen, s)
+    Expr(:call, coded_s[1], coded_s[2:end]...)
+  end
+end
+
+macro lisp(str)
+  assert(isa(str, String))
+  s = read(str)
+  println(codegen(s))
+  return codegen(s)
 end
 
 function repl(is, os)
