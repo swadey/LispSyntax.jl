@@ -80,11 +80,22 @@ end
 
 function quasiquote(s)
   if isa(s, Array) && length(s) == 2 && s[1] == :splice
-    Expr(:escape, codegen(s[2]))
+    #Expr(:$, quasiquote(s[2]))
+    codegen(s[2])
   elseif isa(s, Array) && length(s) == 2 && s[1] == :splice_seq
-    :($(esc(codegen(s[2])))...)
+    Expr(:..., esc(codegen(s[2]))) #:($(esc(codegen(s[2])))...)
   elseif isa(s, Array)
-    map(quasiquote, s)
+    #is_splatted = reduce((x, y) -> x || y, map(x -> isa(x, Array) && length(x) == 2 && x[1] == :splice_seq, s))
+    #if is_splatted
+    x = Expr(:call, :vcat, map(quasiquote, s)...)
+    println(x)
+    x
+    #Expr(:call, :vcat, :(1+2), :(2+3))
+    #else
+    #  map(quasiquote, s)
+    #end
+  elseif isa(s, Symbol)
+    Expr(:quote, s)
   else
     s
   end
@@ -116,8 +127,8 @@ function codegen(s)
   # elseif s[1] == :splice
   # elseif s[1] == :splice_seq
   elseif s[1] == :quasi
-    #Expr(:quasi, codegen(s[2]))
-    quasiquote(s[2]) #-- shit, wrong scope when quasiquote calls eval
+    #Expr(:quote, quasiquote(s[2]))
+    quasiquote(s[2])
   elseif s[1] == :defn
     # Note: julia's lambdas are not optimized yet, so we don't define defn as a macro.
     #       this should be revisited later.
@@ -133,7 +144,6 @@ end
 macro lisp(str)
   assert(isa(str, String))
   s = read(str)
-  println(codegen(s))
   return codegen(s)
 end
 

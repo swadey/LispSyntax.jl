@@ -69,5 +69,6 @@ end
 
 global x = 10
 @expect @lisp("x") == 10
-@expect @lisp("`~x") == { :test, 10 }
-#@expect @lisp("`(test ~x)") == { :test, 10 }
+@expect @lisp("`~x") == 10
+@expect @lisp("`(test ~x)") == { :test, 10 }
+@expect @lisp("`(~x ~x)") == { 10, 10 }
