@@ -1,9 +1,6 @@
 using cl
 using Stage
 
-# Setup
-init_read_table()
-
 # Reader tests
 @expect read("1.1f") == 1.1f0
 @expect read("1.2f") == 1.2f0
@@ -26,29 +23,32 @@ init_read_table()
 
 @expect read("test") == :test
 
-@expect read("()") == []
-@expect read("(1.1f)") == { 1.1f0 }
-@expect read("(1.1f 2.2f)") == { 1.1f0, 2.2f0 }
-@expect read("(+ 1.1f 2)") == { :+, 1.1f0, 2 }
-@expect read("(this (+ 1.1f 2))") == { :this, { :+, 1.1f0, 2 } }
-@expect read("(this (+ 1.1f 2) )") == { :this, { :+, 1.1f0, 2 } }
+@expect read("()") == sx()
+@expect read("(1.1f)") == sx(1.1f0)
+@expect read("(1.1f 2.2f)") == sx(1.1f0, 2.2f0)
+@expect read("(+ 1.1f 2)") == sx(:+, 1.1f0, 2)
+@expect read("(this (+ 1.1f 2))") == sx(:this, sx(:+, 1.1f0, 2))
+@expect read("(this (+ 1.1f 2) )") == sx(:this, sx(:+, 1.1f0, 2))
 
 @expect read("#{1 2 3 4}") == Set(1, 2, 3, 4)
 
 @expect read("{a 2 b 3}")  == { :a => 2, :b => 3 }
 
-@expect read("[1 2 3 4]")  == { 1, 2, 3, 4 }
-@expect read("[]")         == {}
-#@expect read("[1]")        == { 1 }
+@expect read("[1 2 3 4]")  == sx(1, 2, 3, 4)
+@expect read("[]")         == sx()
+@expect read("[1]")        == sx(1)
 
-@expect read("'test")      == [:quote :test]
+@expect read("'test")      == sx(:quote, :test)
 
-@expect read("`test")      == [:quasi :test]
+@expect read("`test")      == sx(:quasi, :test)
 
-@expect read("~test")      == { :splice, :test }
-@expect read("~@(1 2 3)")  == { :splice_seq, { 1, 2, 3 } }
+@expect read("~test")      == sx(:splice, :test)
+@expect read("~@(1 2 3)")  == sx(:splice_seq, sx(1, 2, 3))
 
-@expect read("`~test")     == { :quasi { :splice, :test } }
+@expect read("`~test")     == sx(:quasi, sx(:splice, :test))
+
+@expect desx(sx(:splice_seq, sx(1, 2, 3))) == { :splice_seq, [1, 2, 3] }
+@expect desx(sx(:splice_seq, sx(1, 2, sx(3)))) == { :splice_seq, { 1, 2, [3] } }
 
 # Code generation tests
 if false

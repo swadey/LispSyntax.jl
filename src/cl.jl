@@ -1,85 +1,25 @@
 module cl
-using PEGParser
-export init_read_table, read, codegen, @lisp, repl, @lisp_str
+include("parser.jl")
+#include(pegparser.jl")
+export sx, desx, read, codegen, @lisp, repl, @lisp_str
 
-# package code goes here
+# Konstants
 const prompt = "cl>"
 
-@grammar lisp_grammar begin
-  float_with_dot_matcher = r"[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?[Ff]" { float32(_0[1:end-1]) }
-  float_no_dot_matcher   = r"[-+]?[0-9]*[0-9]+([eE][-+]?[0-9]+)?[Ff]" { float32(_0[1:end-1]) }
-  white_space            = -r"([\s\n\r]*(?<!\\);[^\n\r$]+[\n\r\s$]*|[\s\n\r]+)"
-
-  doubley  = r"[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?[dD]" { float64(_0[1:end-1]) }
-  floaty   = (float_with_dot_matcher | float_no_dot_matcher) { _1 }
-  inty     = r"[-+]?\d+" { int(_0) }
-  uchary   = r"\\(u[\da-fA-F]{4})" { begin x = unescape_string(_0); x[chr2ind(x, 1)] end }
-  achary   = r"\\[0-7]{3}" { unescape_string(_0)[1] }
-  chary    = r"\\." { _0[2] }
-  stringy  = r"\".*?\"" { _0[2:end-1] } #_0[2:end-1] } #r"(?<!\\)\".*?(?<!\\)"
-  booly    = r"(true|false)"i { _0 == "true" ? true : false }
-  symboly  = r"[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" { symbol(_0) }
-  sexpr0   = ("(" + ?(white_space) + ")") { {{}} }
-  sexpr1   = ("(" + list(expr, white_space) + ")") { { vcat(_2.children...) } }
-  sexpr    = (sexpr1 | sexpr0) { children }
-  hashy    = ("#{" + list(expr, white_space) + "}") { Set(vcat(_2.children...)...) }
-  curly    = ("{" + list(expr, white_space) + "}") { [ _2.children[i][1] => _2.children[i+1][1] for i = 1:2:length(_2.children) ] }
-  bracket1 = ("[" + list(expr, white_space) + "]") { { vcat(_2.children...) } }
-  bracket0 = ("[" + ?(white_space) + "]") { {{}} }
-  bracket  = (bracket0 | bracket1) { children }
-  quot     = ("'" + expr) { {[ :quote _2[1] ]} }
-  quasi    = ("`" + expr) { {[ :quasi _2 ]} }
-  tildeseq = ("~@" + expr) { {[ :splice_seq, { _2[1] } ]} }
-  tilde    = ("~" + expr) { {{ :splice, _2[1] }} }
-  # expr    = (double | float | int | uchar | achar | char | string | bools | symbol | sexpr | 
-  #            hash | quot | curly | bracket | quasi | tilde)
-  # start   = expr
-  expr    = (doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | sexpr | hashy | curly | bracket | quot | quasi | tildeseq | tilde) { children }
-  start   = expr { _1 }
+# Internal types
+type s_expr
+  vector
 end
 
-# const lisp_actions = [
-#                       :double  => (node, values) -> float64(node.value[1:end-1]),
-#                       :float   => (node, values) -> begin println(node.children); float32(node.value[1:end-1]) end,
-#                       :int     => (node, values) -> int(node.value),
-#                       :uchar   => (node, values) -> begin x = unescape_string(node.value); x[chr2ind(x, 1)] end,
-#                       :achar   => (node, values) -> unescape_string(node.value)[1],
-#                       :char    => (node, values) -> node.value[2],
-#                       :string  => (node, values) -> node.value[2:end-1],
-#                       :bools   => (node, values) -> node.value == "true" ? true : false,
-#                       :symbol  => (node, values) -> symbol(node.value),
-#                       :sexpr0  => (node, values) -> {},
-#                       :sexpr1  => (node, values) -> typeof(values[2]) == Array{Any, 1} ? values[2] : { values[2] },
-#                       :sexpr   => (node, values) -> values,
-#                       :expr    => (node, values) -> values,
-#                       :hash    => (node, values) -> Set(values[2]),
-#                       :curly   => (node, values) -> [ values[2][i] => values[2][i+1] for i = 1:2:length(values[2]) ],
-#                       :bracket => (node, values) -> values[2],
-#                       :quot    => (node, values) -> { :quote values[2] },
-#                       :quasi   => (node, values) -> { :quasi values[2] },
-#                       :tilde   => (node, values) -> ismatch(r"^~@.*$", node.value) ? { :splice_seq, values[2] } : { :splice, values[2] },
-#                       :default => (node, values) -> values
-#                       ]
+sx(x...) = s_expr([x...])
+==(a :: s_expr, b :: s_expr) = a.vector == b.vector
 
-function init_read_table()
-  # for k in keys(lisp_actions)
-  #   kk = string(k)
-  #   x = :(grammar_transform(node, values, ::MatchRule{symbol($kk)}) = lisp_actions[symbol($kk)](node, values))
-  #   eval(x)
-  # end
-  #println(methods(grammar_transform))
-end
 
-function read(input)
-  ast, pos, err = parse(lisp_grammar, input)
-  if ast == nothing
-    println("pos: " * string(pos))
-    println("err: " * string(err))
-    return nothing
+function desx(s)
+  if typeof(s) == s_expr
+    return map(desx, s.vector)
   else
-    #clean = transform(grammar_transform, ast)#, ignore = [:white_space, :float_with_dot_matcher, :float_no_dot_matcher])
-    #return clean
-    return ast
+    return s
   end
 end
 
@@ -155,26 +95,24 @@ end
 
 macro lisp(str)
   assert(isa(str, String))
-  s = read(str)
+  s = desx(read(str))
   e = codegen(s)
   return e
 end
 
 macro lisp_str(str)
   assert(isa(str, String))
-  s = read(str)
+  s = desx(read(str))
   e = codegen(s)
   return e
 end
 
 function repl(is, os)
-  # init
-  init_read_table()
   
   # repl loop
   while true
     print(os, prompt * " ")
-    input = read(is)
+    input = desx(read(is))
     res   = eval(input)
     println(res)
   end
