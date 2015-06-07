@@ -38,6 +38,8 @@ init_read_table()
 @expect read("{a 2 b 3}")  == { :a => 2, :b => 3 }
 
 @expect read("[1 2 3 4]")  == { 1, 2, 3, 4 }
+@expect read("[]")         == {}
+#@expect read("[1]")        == { 1 }
 
 @expect read("'test")      == [:quote :test]
 
@@ -45,6 +47,8 @@ init_read_table()
 
 @expect read("~test")      == { :splice, :test }
 @expect read("~@(1 2 3)")  == { :splice_seq, { 1, 2, 3 } }
+
+@expect read("`~test")     == { :quasi { :splice, :test } }
 
 # Code generation tests
 if false
@@ -69,6 +73,22 @@ end
 
 global x = 10
 @expect @lisp("x") == 10
+@expect lisp"x" == 10
 @expect @lisp("`~x") == 10
+@expect lisp"`~x" == 10
 @expect @lisp("`(test ~x)") == { :test, 10 }
+@expect lisp"`(test ~x)" == { :test, 10 }
 @expect @lisp("`(~x ~x)") == { 10, 10 }
+global y = { 1, 2 }
+@expect @lisp("`(~x ~@y)") == { 10, 1, 2 }
+@expect @lisp("`(~x ~y)") == { 10, {1, 2} }
+
+@expect @lisp("`(10 ~(+ 10 x))") == {10, 20}
+
+@lisp("(defn xxx [a b] (+ a b))")
+@expect @lisp("(xxx 1 2)") == 3
+
+global z = 10
+@lisp("(defn yyy [a] (+ a z))")
+@expect @lisp("(yyy 1)") == 11
+@expect @lisp("(yyy z)") == 20
