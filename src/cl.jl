@@ -1,4 +1,4 @@
-module cl
+module Lisp
 include("parser.jl")
 #include(pegparser.jl")
 export sx, desx, read, codegen, @lisp, repl, @lisp_str
