@@ -81,9 +81,7 @@ function codegen(s; escape_exceptions = Set{Symbol}())
   elseif s[1] == :defn
     # Note: julia's lambdas are not optimized yet, so we don't define defn as a macro.
     #       this should be revisited later.
-    println(s)
     a = Expr(:function, Expr(:call, esc(s[2]), s[3]...), codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3])))
-    println(a)
     a
   elseif s[1] == :macro
   elseif s[1] == :defmethod

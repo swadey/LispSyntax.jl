@@ -92,3 +92,10 @@ global z = 10
 @lisp("(defn yyy [a] (+ a z))")
 @expect @lisp("(yyy 1)") == 11
 @expect @lisp("(yyy z)") == 20
+
+lisp"(defn fib [a] (if (< a 2) a (+ (fib (- a 1)) (fib (- a 2)))))"
+@expect lisp"(fib 2)" == 1
+@expect lisp"(fib 4)" == 3
+@expect lisp"(fib 30)" == 832040
+@expect lisp"(fib 40)" == 102334155
+
