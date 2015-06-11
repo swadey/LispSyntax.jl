@@ -1,7 +1,9 @@
 using Lisp
 using Stage
 
-# Reader tests
+# ----------------------------------------------------------------------------------------------------------------------
+# Reader
+# ----------------------------------------------------------------------------------------------------------------------
 @expect read("1.1f") == 1.1f0
 @expect read("1.2f") == 1.2f0
 @expect read("2f")   == 2f0
@@ -50,30 +52,40 @@ using Stage
 @expect desx(sx(:splice_seq, sx(1, 2, 3))) == { :splice_seq, [1, 2, 3] }
 @expect desx(sx(:splice_seq, sx(1, 2, sx(3)))) == { :splice_seq, { 1, 2, [3] } }
 
-# Code generation tests
-if false
-@expect codegen(read("(if true a)")) == :(true && a)
-@expect codegen(read("(if true a b)")) == :(true ? a : b)
+# ----------------------------------------------------------------------------------------------------------------------
+# Code generation
+# ----------------------------------------------------------------------------------------------------------------------
+@expect codegen(desx(read("(if true a)"))) == :(true && $(esc(:a)))
+@expect codegen(desx(read("(if true a b)"))) == :(true ? $(esc(:a)) : $(esc(:b)))
 
-@expect codegen(read("(call)")) == :(call())
-@expect codegen(read("(call a)")) == :(call(a))
-@expect codegen(read("(call a b)")) == :(call(a, b))
-@expect codegen(read("(call a b c)")) == :(call(a, b, c))
+@expect codegen(desx(read("(call)"))) == :($(esc(:call))())
+@expect codegen(desx(read("(call a)"))) == :($(esc(:call))($(esc(:a))))
+@expect codegen(desx(read("(call a b)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b))))
+@expect codegen(desx(read("(call a b c)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b)), $(esc(:c))))
 
-@expect codegen(read("(lambda (x) (call x))")) == Expr(:function, :((x,)), :(call(x)))
+@expect codegen(desx(read("(lambda (x) (call x))"))) == Expr(:function, :((x,)), :($(esc(:call))(x)))
 
-@expect codegen(read("(def x 3)")) == :(x = 3)
-@expect codegen(read("(def x (+ 3 1))")) == :(x = +(3, 1))
+@expect codegen(desx(read("(def x 3)"))) == :($(esc(:x)) = 3)
+@expect codegen(desx(read("(def x (+ 3 1))"))) == :($(esc(:x)) = $(esc(:+))(3, 1))
 
-@expect codegen(read("'test")) == :test
-@expect codegen(read("'(1 2)")) == { 1, 2 }
-@expect codegen(read("'(1 2 a b)")) == { 1, 2, :a, :b }
-@expect codegen(read("(call 1 '2)")) == :(call(1, 2))
-end
+@expect codegen(desx(read("'test"))) == :test
+@expect codegen(desx(read("'(1 2)"))) == { 1, 2 }
+@expect codegen(desx(read("'(1 2 a b)"))) == { 1, 2, :a, :b }
+@expect codegen(desx(read("(call 1 '2)"))) == :($(esc(:call))(1, 2))
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Scope and variables
+# ----------------------------------------------------------------------------------------------------------------------
 global x = 10
 @expect @lisp("x") == 10
 @expect lisp"x" == 10
+
+lisp"(def w (+ 3 1))"
+@expect w == 4
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Quoting and splicing
+# ----------------------------------------------------------------------------------------------------------------------
 @expect @lisp("`~x") == 10
 @expect lisp"`~x" == 10
 @expect @lisp("`(test ~x)") == { :test, 10 }
@@ -85,6 +97,9 @@ global y = { 1, 2 }
 
 @expect @lisp("`(10 ~(+ 10 x))") == {10, 20}
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Functions
+# ----------------------------------------------------------------------------------------------------------------------
 @lisp("(defn xxx [a b] (+ a b))")
 @expect @lisp("(xxx 1 2)") == 3
 
@@ -93,9 +108,19 @@ global z = 10
 @expect @lisp("(yyy 1)") == 11
 @expect @lisp("(yyy z)") == 20
 
+# recursion
 lisp"(defn fib [a] (if (< a 2) a (+ (fib (- a 1)) (fib (- a 2)))))"
 @expect lisp"(fib 2)" == 1
 @expect lisp"(fib 4)" == 3
 @expect lisp"(fib 30)" == 832040
 @expect lisp"(fib 40)" == 102334155
 
+# Note this version is very slow due to the anonymous function
+lisp"(def fib2 (lambda [a] (if (< a 2) a (+ (fib2 (- a 1)) (fib2 (- a 2))))))"
+@expect lisp"(fib2 2)" == 1
+@expect lisp"(fib2 4)" == 3
+@expect lisp"(fib2 30)" == 832040
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Macros
+# ----------------------------------------------------------------------------------------------------------------------

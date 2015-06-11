@@ -66,7 +66,7 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     end
   elseif s[1] == :def
     assert(length(s) == 3)
-    :($(s[2]) = $(codegen(s[3], escape_exceptions = escape_exceptions)))
+    :($(esc(s[2])) = $(codegen(s[3], escape_exceptions = escape_exceptions)))
   elseif s[1] == :quote
     s[2]
   elseif s[1] == :splice
@@ -77,14 +77,16 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     quasiquote(s[2])
   elseif s[1] == :lambda
     assert(length(s) == 3)
-    Expr(:function, Expr(:tuple, s[2]...), codegen(s[3],  escape_exceptions = escape_exceptions))
+    Expr(:function, Expr(:tuple, s[2]...), codegen(s[3],  escape_exceptions = escape_exceptions ∪ Set(s[2])))
   elseif s[1] == :defn
     # Note: julia's lambdas are not optimized yet, so we don't define defn as a macro.
     #       this should be revisited later.
     a = Expr(:function, Expr(:call, esc(s[2]), s[3]...), codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3])))
     a
   elseif s[1] == :macro
+    # TODO
   elseif s[1] == :defmethod
+    # TODO
   else
     coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions), s)
     Expr(:call, coded_s[1], coded_s[2:end]...)
