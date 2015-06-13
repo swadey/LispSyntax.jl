@@ -1,7 +1,7 @@
 module Lisp
 include("parser.jl")
 #include(pegparser.jl")
-export sx, desx, read, codegen, @lisp, repl, @lisp_str
+export sx, desx, read, codegen, @lisp, repl, @lisp_str, lexpr
 
 # Konstants
 const prompt = "cl>"
@@ -31,13 +31,13 @@ function construct_sexpr(items...) # convert the input tuple to an array
   ret
 end
 
-function quasiquote(s)
+function quasiquote(s, escape_exceptions)
   if isa(s, Array) && length(s) == 2 && s[1] == :splice
-    codegen(s[2])
+    codegen(s[2], escape_exceptions = escape_exceptions)
   elseif isa(s, Array) && length(s) == 2 && s[1] == :splice_seq
-    Expr(:..., codegen(s[2]))
+    Expr(:..., codegen(s[2], escape_exceptions = escape_exceptions))
   elseif isa(s, Array)
-    Expr(:call, :construct_sexpr, map(quasiquote, s)...)
+    Expr(:call, :construct_sexpr, map(s -> quasiquote(s, escape_exceptions), s)...)
   elseif isa(s, Symbol)
     Expr(:quote, s)
   else
@@ -74,22 +74,31 @@ function codegen(s; escape_exceptions = Set{Symbol}())
   elseif s[1] == :splice_seq
     throw("missplaced ~@ (splice_seq)")
   elseif s[1] == :quasi
-    quasiquote(s[2])
+    quasiquote(s[2], escape_exceptions)
   elseif s[1] == :lambda
     assert(length(s) == 3)
     Expr(:function, Expr(:tuple, s[2]...), codegen(s[3],  escape_exceptions = escape_exceptions ∪ Set(s[2])))
   elseif s[1] == :defn
     # Note: julia's lambdas are not optimized yet, so we don't define defn as a macro.
     #       this should be revisited later.
-    a = Expr(:function, Expr(:call, esc(s[2]), s[3]...), codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3])))
-    a
-  elseif s[1] == :macro
+    Expr(:function, Expr(:call, esc(s[2]), s[3]...), codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3])))
+  elseif s[1] == :defmacro
     # TODO
+     Expr(:macro, Expr(:call, esc(s[2]), s[3]...),
+          begin
+            sexpr = codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3]))
+            :(codegen($sexpr, escape_exceptions = $escape_exceptions ∪ Set($(s[3]))))
+          end)
   elseif s[1] == :defmethod
     # TODO
   else
     coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions), s)
-    Expr(:call, coded_s[1], coded_s[2:end]...)
+    if (typeof(coded_s[1]) == Symbol && ismatch(r"^@.*$", string(coded_s[1]))) ||
+       (typeof(coded_s[1]) == Expr && ismatch(r"^@.*$", string(coded_s[1].args[1])))
+      Expr(:macrocall, coded_s[1], coded_s[2:end]...)
+    else
+      Expr(:call, coded_s[1], coded_s[2:end]...)
+    end
   end
 end
 
@@ -101,6 +110,13 @@ macro lisp(str)
 end
 
 macro lisp_str(str)
+  assert(isa(str, String))
+  s = desx(read(str))
+  e = codegen(s)
+  return e
+end
+
+function lexpr(str)
   assert(isa(str, String))
   s = desx(read(str))
   e = codegen(s)

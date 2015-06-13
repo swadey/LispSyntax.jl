@@ -19,6 +19,7 @@ chary        = p"\\." > (x -> x[2])
 stringy      = p"(?<!\\)\".*?(?<!\\)\"" > (x -> x[2:end-1]) #_0[2:end-1] } #r"(?<!\\)\".*?(?<!\\)"
 booly        = p"(true|false)" > (x -> x == "true" ? true : false)
 symboly      = p"[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" > symbol
+macrosymy    = p"@[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" > symbol
 
 sexpr        = S"(" + ~opt_ws + Repeat(expr + ~opt_ws) + S")" |> (x -> s_expr(x))
 hashy        = S"#{" + Repeat(expr + ~opt_ws) + S"}" |> (x -> Set(x...))
@@ -29,7 +30,7 @@ quasi        = S"`" + expr > (x -> sx(:quasi, x))
 tildeseq     = S"~@" + expr > (x -> sx(:splice_seq, x))
 tilde        = S"~" + expr > (x -> sx(:splice, x))
 
-expr.matcher = Nullable{ParserCombinator.Matcher}(doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | sexpr |
+expr.matcher = Nullable{ParserCombinator.Matcher}(doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | macrosymy | sexpr |
                                                   hashy | curly | bracket | quot | quasi | tildeseq | tilde)
 #expr.matcher = doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | sexpr
 
