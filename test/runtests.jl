@@ -136,6 +136,7 @@ lisp"(defmacro fapply [f a] `(~f ~a))"
 # ----------------------------------------------------------------------------------------------------------------------
 number = 0
 output = 0
+
 macro incr(x)
   quote
     $(esc(x)) = $(esc(x)) + 1
@@ -155,7 +156,7 @@ lisp"(for [i (range 1 10) j (range 1 10)] (@incr r))"
 @expect r == 100
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Let
+# Let and do
 # ----------------------------------------------------------------------------------------------------------------------
 @expect lisp"(let [x 10] x)" == 10
 @expect lisp"(let [x 10 y 20] (+ x y))" == 30
@@ -164,3 +165,6 @@ lisp"(for [i (range 1 10) j (range 1 10)] (@incr r))"
 @expect lisp"(let [x 10 y 20 z 20 number 10] (+ x y z number))" == 60
 @expect lisp"(let [x 10 y 20 z 20] (- (+ x y z number) output))" == 50
 
+lisp"(do (@incr r) (@incr number))"
+@expect number == 3
+@expect r == 101
