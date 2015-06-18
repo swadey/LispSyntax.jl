@@ -67,6 +67,17 @@ function codegen(s; escape_exceptions = Set{Symbol}())
   elseif s[1] == :def
     assert(length(s) == 3)
     :($(esc(s[2])) = $(codegen(s[3], escape_exceptions = escape_exceptions)))
+  elseif s[1] == :let
+    syms     = Set([ s[2][i] for i = 1:2:length(s[2]) ])
+    bindings = [ :($(s[2][i]) = $(codegen(s[2][i+1], escape_exceptions = escape_exceptions ∪ syms))) for i = 1:2:length(s[2]) ]
+    coded_s  = map(x -> codegen(x, escape_exceptions = escape_exceptions ∪ syms), s[3:end])
+    Expr(:let, Expr(:block, coded_s...), bindings...)
+  elseif s[1] == :while
+    # TODO
+    coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions), s[2:end])
+    Expr(:while, coded_s[1], Expr(:block, coded_s[2:end]...))
+  elseif s[1] == :for
+    # TODO
   elseif s[1] == :quote
     s[2]
   elseif s[1] == :splice
@@ -83,7 +94,6 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     #       this should be revisited later.
     Expr(:function, Expr(:call, esc(s[2]), s[3]...), codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3])))
   elseif s[1] == :defmacro
-    # TODO
      Expr(:macro, Expr(:call, esc(s[2]), s[3]...),
           begin
             sexpr = codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3]))

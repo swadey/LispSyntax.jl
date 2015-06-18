@@ -131,3 +131,29 @@ lisp"(defmacro fapply [f a] `(~f ~a))"
 @expect lisp"(@fapply fib2 2)" == 1
 @expect lisp"(@fapply fact (+ 3 1))" == 24
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Loops
+# ----------------------------------------------------------------------------------------------------------------------
+number = 0
+output = 0
+macro incr(x)
+  quote
+    $(esc(x)) = $(esc(x)) + 1
+    $(esc(x))
+  end
+end
+
+lisp"(while (< number 2) (@incr number) (@incr output))"
+@expect number == 2
+@expect output == 2
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Let
+# ----------------------------------------------------------------------------------------------------------------------
+@expect lisp"(let [x 10] x)" == 10
+@expect lisp"(let [x 10 y 20] (+ x y))" == 30
+@expect lisp"(let [x 10 y 20 z 20] (+ x y z))" == 50
+@expect lisp"(let [x 10 y 20 z 20] (+ x y z number))" == 52
+@expect lisp"(let [x 10 y 20 z 20 number 10] (+ x y z number))" == 60
+@expect lisp"(let [x 10 y 20 z 20] (- (+ x y z number) output))" == 50
+
