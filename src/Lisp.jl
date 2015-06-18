@@ -73,11 +73,13 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     coded_s  = map(x -> codegen(x, escape_exceptions = escape_exceptions ∪ syms), s[3:end])
     Expr(:let, Expr(:block, coded_s...), bindings...)
   elseif s[1] == :while
-    # TODO
     coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions), s[2:end])
     Expr(:while, coded_s[1], Expr(:block, coded_s[2:end]...))
   elseif s[1] == :for
-    # TODO
+    syms     = Set([ s[2][i] for i = 1:2:length(s[2]) ])
+    bindings = [ :($(s[2][i]) = $(codegen(s[2][i+1], escape_exceptions = escape_exceptions ∪ syms))) for i = 1:2:length(s[2]) ]
+    coded_s  = map(x -> codegen(x, escape_exceptions = escape_exceptions ∪ syms), s[3:end])
+    Expr(:for, Expr(:block, bindings...), Expr(:block, coded_s...))
   elseif s[1] == :quote
     s[2]
   elseif s[1] == :splice

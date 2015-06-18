@@ -146,6 +146,13 @@ end
 lisp"(while (< number 2) (@incr number) (@incr output))"
 @expect number == 2
 @expect output == 2
+r = output
+lisp"(for [i (range 1 10)] (@incr r))"
+@expect r == 12
+
+r = 0
+lisp"(for [i (range 1 10) j (range 1 10)] (@incr r))"
+@expect r == 100
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Let
