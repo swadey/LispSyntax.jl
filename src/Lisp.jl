@@ -82,6 +82,8 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     Expr(:for, Expr(:block, bindings...), Expr(:block, coded_s...))
   elseif s[1] == :do
     Expr(:block, map(x -> codegen(x, escape_exceptions = escape_exceptions), s[2:end])...)
+  elseif s[1] == :global
+    Expr(:global, map(x -> esc(x), s[2:end])...)
   elseif s[1] == :quote
     s[2]
   elseif s[1] == :splice
@@ -96,11 +98,13 @@ function codegen(s; escape_exceptions = Set{Symbol}())
   elseif s[1] == :defn
     # Note: julia's lambdas are not optimized yet, so we don't define defn as a macro.
     #       this should be revisited later.
-    Expr(:function, Expr(:call, esc(s[2]), s[3]...), codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3])))
+    coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions ∪ Set(s[3])), s[4:end])
+    Expr(:function, Expr(:call, esc(s[2]), s[3]...), Expr(:block, coded_s...))
   elseif s[1] == :defmacro
      Expr(:macro, Expr(:call, esc(s[2]), s[3]...),
           begin
-            sexpr = codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3]))
+            coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions ∪ Set(s[3])), s[4:end])
+            sexpr = Expr(:block, coded_s...) #codegen(s[4], escape_exceptions = escape_exceptions ∪ Set(s[3]))
             :(codegen($sexpr, escape_exceptions = $escape_exceptions ∪ Set($(s[3]))))
           end)
   elseif s[1] == :defmethod
