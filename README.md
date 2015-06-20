@@ -77,3 +77,7 @@ TODO
 - Optional typing to support method definition
 - Structs and aggregate types
 - Special dispatch for string macro forms
+- Modules
+- import vs. using vs. include -- only `using` is currently
+  implemented and confusingly, it matches Clojure's import form.
+- varargs and named arguments
