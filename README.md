@@ -40,7 +40,7 @@ Special Forms
 Notable Differences
 -------------------
 
-- *Symbol names cannot have `-`* - Julia symbol naming is used for
+- *Symbol names cannot have `-`, `*`, `/`, `?`...* - Julia symbol naming is used for
    everything, as a result, Julia syntax restrictions are maintained
    in `Lisp.jl`.
 - *Reference to global variables in function scopes* - Julia requires
