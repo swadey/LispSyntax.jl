@@ -39,4 +39,25 @@ Special Forms
 Notable Differences
 -------------------
 
-
+- *Reference to global variables in function scopes* - julia requires
+   declaration of global symbols that are referenced in function
+   scope.  Because of this functions need to declare which symbols are
+   global.  This is done via the special form `(global symbol*)`.
+- *Binding forms not implemented* - Clojure has very awesome
+   destructuring binds that can used in most special forms requiring
+   bindings (e.g. `let`, `fn` parameter lists, etc.).  This is not
+   currently implemented.
+- *Lack of loop/recur* - Currently, this is not implemented.  As with
+   Clojure, julia does not currently support TCO, so something like
+   this may be needed (but a macro-implementation of tail call rewriting may be
+   more appropriate for julia).
+- *Optional typing* - Currently not implemented.
+- *Method definition* - Also not currently implemented.  If
+   implemented it will probably not be a full implementation of
+   Clojure's sophisticated dispatch system.
+- *Macros differences* - Macros defined in `Lisp.jl` look like
+   standard Lisp macros but because expressions are special objects in
+   julia, S-expressions returned from macros require a special
+   translation step to generate julia expression trees.  The result is
+   that `Lisp.jl` macros are directly translated into Julia macros and
+   must be called via special syntax (e.g. `(@macro expr)`)
