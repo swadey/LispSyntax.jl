@@ -34,12 +34,16 @@ Special Forms
 - `(global symbol*)`
 - `(while test expr*)`
 - `(for [binding*] expr*)`
+- `(import package*)`
 
 
 Notable Differences
 -------------------
 
-- *Reference to global variables in function scopes* - julia requires
+- *Symbol names cannot have `-`* - Julia symbol naming is used for
+   everything, as a result, Julia syntax restrictions are maintained
+   in `Lisp.jl`.
+- *Reference to global variables in function scopes* - Julia requires
    declaration of global symbols that are referenced in function
    scope.  Because of this functions need to declare which symbols are
    global.  This is done via the special form `(global symbol*)`.
@@ -60,4 +64,16 @@ Notable Differences
    julia, S-expressions returned from macros require a special
    translation step to generate julia expression trees.  The result is
    that `Lisp.jl` macros are directly translated into Julia macros and
-   must be called via special syntax (e.g. `(@macro expr)`)
+   must be called via special syntax (e.g. `(@macro expr)`).
+- *Julia's string macro dispatch not supported (yet)* - for macros
+   like `@r_str` which in Julia can be called via `r""`, it is
+   currently necessary to call these via standard macro syntax:
+   `(@r_str "string")`
+
+TODO
+----
+
+- Support for exceptions: this is straight forward but not currently implemented.
+- Optional typing to support method definition
+- Structs and aggregate types
+- Special dispatch for string macro forms

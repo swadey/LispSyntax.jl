@@ -86,6 +86,8 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     Expr(:global, map(x -> esc(x), s[2:end])...)
   elseif s[1] == :quote
     s[2]
+  elseif s[1] == :import
+     Expr(:using, map(x -> esc(x), s[2:end])...)
   elseif s[1] == :splice
     throw("missplaced ~ (splice)")
   elseif s[1] == :splice_seq
