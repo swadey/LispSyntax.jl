@@ -73,8 +73,7 @@ end
 @expect codegen(desx(read("(call a b)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b))))
 @expect codegen(desx(read("(call a b c)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b)), $(esc(:c))))
 
-@expect codegen(desx(read("(lambda (x) (call x))"))) == Expr(:function, :((x,)), :($(esc(:call))(x)))
-
+@expect codegen(desx(read("(lambda (x) (call x))"))) == Expr(:function, :((x,)), Expr(:block, :($(esc(:call))(x))))
 @expect codegen(desx(read("(def x 3)"))) == :($(esc(:x)) = 3)
 @expect codegen(desx(read("(def x (+ 3 1))"))) == :($(esc(:x)) = $(esc(:+))(3, 1))
 
@@ -107,6 +106,8 @@ global y = { 1, 2 }
 
 @expect @lisp("`(10 ~(+ 10 x))") == {10, 20}
 
+@expect lisp"(quote (+ 1 2))" == {:+, 1, 2}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Functions
 # ----------------------------------------------------------------------------------------------------------------------
@@ -134,6 +135,14 @@ lisp"(def fib2 (lambda [a] (if (< a 2) a (+ (fib2 (- a 1)) (fib2 (- a 2))))))"
 lisp"(defn dostuff [a] (@incr a) (@incr a) (@incr a))"
 @expect lisp"(dostuff 3)" == 6
 @expect lisp"(dostuff 6)" == 9
+
+lisp"(def dostuff2 (lambda [a] (@incr a) (@incr a) (@incr a)))"
+@expect lisp"(dostuff2 3)" == 6
+@expect lisp"(dostuff2 6)" == 9
+
+lisp"(def dostuff3 (fn [a] (@incr a) (@incr a) (@incr a)))"
+@expect lisp"(dostuff3 3)" == 6
+@expect lisp"(dostuff3 6)" == 9
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Macros

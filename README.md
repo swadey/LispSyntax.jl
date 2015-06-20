@@ -21,6 +21,21 @@ are very similar to scheme/lisp in many ways).  The net result is that
 Lisp.jl is really an alternative S-expression-like syntax for julia,
 not an implemention of clojure or lisp.
 
+Special Forms
+-------------
+
+- `(def symbol init)`
+- `(quote form)`
+- `(defn symbol [param*] expr*)`
+- `(defmacro symbol [param*] expr*)`
+- `(lambda [param*] expr*)``
+- `(fn [param*] expr*)``
+- `(let [binding*] expr*)`
+- `(global symbol*)`
+- `(while test expr*)`
+- `(for [binding*] expr*)`
+
+
 Notable Differences
 -------------------
 

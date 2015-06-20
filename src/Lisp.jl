@@ -92,9 +92,10 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     throw("missplaced ~@ (splice_seq)")
   elseif s[1] == :quasi
     quasiquote(s[2], escape_exceptions)
-  elseif s[1] == :lambda
-    assert(length(s) == 3)
-    Expr(:function, Expr(:tuple, s[2]...), codegen(s[3],  escape_exceptions = escape_exceptions ∪ Set(s[2])))
+  elseif s[1] == :lambda || s[1] == :fn
+    assert(length(s) >= 3)
+    coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions ∪ Set(s[2])), s[3:end])
+    Expr(:function, Expr(:tuple, s[2]...), Expr(:block, coded_s...))
   elseif s[1] == :defn
     # Note: julia's lambdas are not optimized yet, so we don't define defn as a macro.
     #       this should be revisited later.
