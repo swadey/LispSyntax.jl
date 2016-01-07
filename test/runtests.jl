@@ -14,73 +14,73 @@ end
 # ----------------------------------------------------------------------------------------------------------------------
 # Reader
 # ----------------------------------------------------------------------------------------------------------------------
-@expect read("1.1f") == 1.1f0
-@expect read("1.2f") == 1.2f0
-@expect read("2f")   == 2f0
+@expect Lisp.read("1.1f") == 1.1f0
+@expect Lisp.read("1.2f") == 1.2f0
+@expect Lisp.read("2f")   == 2f0
 
-@expect read("3.0d") == 3.0
+@expect Lisp.read("3.0d") == 3.0
 
-@expect read("4")    == 4
+@expect Lisp.read("4")    == 4
 
-@expect read("\\u2312") == '\u2312'
+@expect Lisp.read("\\u2312") == '\u2312'
 
-@expect read("\\040") == ' '
+@expect Lisp.read("\\040") == ' '
 
-@expect read("\\c") == 'c'
+@expect Lisp.read("\\c") == 'c'
 
-@expect read("\"test\"") == "test"
+@expect Lisp.read("\"test\"") == "test"
 
-@expect read("true") == true
-@expect read("false") == false
+@expect Lisp.read("true") == true
+@expect Lisp.read("false") == false
 
-@expect read("test") == :test
+@expect Lisp.read("test") == :test
 
-@expect read("()") == sx()
-@expect read("(1.1f)") == sx(1.1f0)
-@expect read("(1.1f 2.2f)") == sx(1.1f0, 2.2f0)
-@expect read("(+ 1.1f 2)") == sx(:+, 1.1f0, 2)
-@expect read("(this (+ 1.1f 2))") == sx(:this, sx(:+, 1.1f0, 2))
-@expect read("(this (+ 1.1f 2) )") == sx(:this, sx(:+, 1.1f0, 2))
+@expect Lisp.read("()") == sx()
+@expect Lisp.read("(1.1f)") == sx(1.1f0)
+@expect Lisp.read("(1.1f 2.2f)") == sx(1.1f0, 2.2f0)
+@expect Lisp.read("(+ 1.1f 2)") == sx(:+, 1.1f0, 2)
+@expect Lisp.read("(this (+ 1.1f 2))") == sx(:this, sx(:+, 1.1f0, 2))
+@expect Lisp.read("(this (+ 1.1f 2) )") == sx(:this, sx(:+, 1.1f0, 2))
 
-@expect read("#{1 2 3 4}") == Set(1, 2, 3, 4)
+@expect Lisp.read("#{1 2 3 4}") == Set([1, 2, 3, 4])
 
-@expect read("{a 2 b 3}")  == { :a => 2, :b => 3 }
+@expect Lisp.read("{a 2 b 3}")  == Dict(:a => 2, :b => 3)
 
-@expect read("[1 2 3 4]")  == sx(1, 2, 3, 4)
-@expect read("[]")         == sx()
-@expect read("[1]")        == sx(1)
+@expect Lisp.read("[1 2 3 4]")  == sx(1, 2, 3, 4)
+@expect Lisp.read("[]")         == sx()
+@expect Lisp.read("[1]")        == sx(1)
 
-@expect read("'test")      == sx(:quote, :test)
+@expect Lisp.read("'test")      == sx(:quote, :test)
 
-@expect read("`test")      == sx(:quasi, :test)
+@expect Lisp.read("`test")      == sx(:quasi, :test)
 
-@expect read("~test")      == sx(:splice, :test)
-@expect read("~@(1 2 3)")  == sx(:splice_seq, sx(1, 2, 3))
+@expect Lisp.read("~test")      == sx(:splice, :test)
+@expect Lisp.read("~@(1 2 3)")  == sx(:splice_seq, sx(1, 2, 3))
 
-@expect read("`~test")     == sx(:quasi, sx(:splice, :test))
+@expect Lisp.read("`~test")     == sx(:quasi, sx(:splice, :test))
 
-@expect desx(sx(:splice_seq, sx(1, 2, 3))) == { :splice_seq, [1, 2, 3] }
-@expect desx(sx(:splice_seq, sx(1, 2, sx(3)))) == { :splice_seq, { 1, 2, [3] } }
+@expect desx(sx(:splice_seq, sx(1, 2, 3))) == Any[ :splice_seq, [1, 2, 3] ]
+@expect desx(sx(:splice_seq, sx(1, 2, sx(3)))) == Any[ :splice_seq, Any[ 1, 2, [3] ] ]
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Code generation
 # ----------------------------------------------------------------------------------------------------------------------
-@expect codegen(desx(read("(if true a)"))) == :(true && $(esc(:a)))
-@expect codegen(desx(read("(if true a b)"))) == :(true ? $(esc(:a)) : $(esc(:b)))
+@expect codegen(desx(Lisp.read("(if true a)"))) == :(true && $(esc(:a)))
+@expect codegen(desx(Lisp.read("(if true a b)"))) == :(true ? $(esc(:a)) : $(esc(:b)))
 
-@expect codegen(desx(read("(call)"))) == :($(esc(:call))())
-@expect codegen(desx(read("(call a)"))) == :($(esc(:call))($(esc(:a))))
-@expect codegen(desx(read("(call a b)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b))))
-@expect codegen(desx(read("(call a b c)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b)), $(esc(:c))))
+@expect codegen(desx(Lisp.read("(call)"))) == :($(esc(:call))())
+@expect codegen(desx(Lisp.read("(call a)"))) == :($(esc(:call))($(esc(:a))))
+@expect codegen(desx(Lisp.read("(call a b)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b))))
+@expect codegen(desx(Lisp.read("(call a b c)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b)), $(esc(:c))))
 
-@expect codegen(desx(read("(lambda (x) (call x))"))) == Expr(:function, :((x,)), Expr(:block, :($(esc(:call))(x))))
-@expect codegen(desx(read("(def x 3)"))) == :($(esc(:x)) = 3)
-@expect codegen(desx(read("(def x (+ 3 1))"))) == :($(esc(:x)) = $(esc(:+))(3, 1))
+@expect codegen(desx(Lisp.read("(lambda (x) (call x))"))) == Expr(:function, :((x,)), Expr(:block, :($(esc(:call))(x))))
+@expect codegen(desx(Lisp.read("(def x 3)"))) == :($(esc(:x)) = 3)
+@expect codegen(desx(Lisp.read("(def x (+ 3 1))"))) == :($(esc(:x)) = $(esc(:+))(3, 1))
 
-@expect codegen(desx(read("'test"))) == :test
-@expect codegen(desx(read("'(1 2)"))) == { 1, 2 }
-@expect codegen(desx(read("'(1 2 a b)"))) == { 1, 2, :a, :b }
-@expect codegen(desx(read("(call 1 '2)"))) == :($(esc(:call))(1, 2))
+@expect codegen(desx(Lisp.read("'test"))) == :test
+@expect codegen(desx(Lisp.read("'(1 2)"))) == Any[ 1, 2 ]
+@expect codegen(desx(Lisp.read("'(1 2 a b)"))) == Any[ 1, 2, :a, :b ]
+@expect codegen(desx(Lisp.read("(call 1 '2)"))) == :($(esc(:call))(1, 2))
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Scope and variables
@@ -97,16 +97,16 @@ lisp"(def w (+ 3 1))"
 # ----------------------------------------------------------------------------------------------------------------------
 @expect @lisp("`~x") == 10
 @expect lisp"`~x" == 10
-@expect @lisp("`(test ~x)") == { :test, 10 }
-@expect lisp"`(test ~x)" == { :test, 10 }
-@expect @lisp("`(~x ~x)") == { 10, 10 }
-global y = { 1, 2 }
-@expect @lisp("`(~x ~@y)") == { 10, 1, 2 }
-@expect @lisp("`(~x ~y)") == { 10, {1, 2} }
+@expect @lisp("`(test ~x)") == Any[ :test, 10 ]
+@expect lisp"`(test ~x)" == Any[ :test, 10 ]
+@expect @lisp("`(~x ~x)") == Any[ 10, 10 ]
+global y = Any[ 1, 2 ]
+@expect @lisp("`(~x ~@y)") == Any[ 10, 1, 2 ]
+@expect @lisp("`(~x ~y)") == Any[ 10, {1, 2} ]
 
-@expect @lisp("`(10 ~(+ 10 x))") == {10, 20}
+@expect @lisp("`(10 ~(+ 10 x))") == Any[10, 20]
 
-@expect lisp"(quote (+ 1 2))" == {:+, 1, 2}
+@expect lisp"(quote (+ 1 2))" == Any[:+, 1, 2]
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Functions
@@ -196,4 +196,4 @@ lisp"(do (@incr r) (@incr number))"
 # Import
 # ----------------------------------------------------------------------------------------------------------------------
 lisp"(import ParserCombinator)"
-@expect lisp"(@S_str \"S\")" == S"S"
+@expect lisp"(@E_str \"S\")" == E"S"

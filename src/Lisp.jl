@@ -1,7 +1,7 @@
 module Lisp
 include("parser.jl")
 #include(pegparser.jl")
-export sx, desx, read, codegen, @lisp, repl, @lisp_str, lexpr
+export sx, desx, codegen, @lisp, repl, @lisp_str, lexpr
 
 # Konstants
 const prompt = "cl>"
@@ -124,22 +124,22 @@ function codegen(s; escape_exceptions = Set{Symbol}())
 end
 
 macro lisp(str)
-  assert(isa(str, String))
-  s = desx(read(str))
+  assert(isa(str, AbstractString))
+  s = desx(Lisp.read(str))
   e = codegen(s)
   return e
 end
 
 macro lisp_str(str)
-  assert(isa(str, String))
-  s = desx(read(str))
+  assert(isa(str, AbstractString))
+  s = desx(Lisp.read(str))
   e = codegen(s)
   return e
 end
 
 function lexpr(str)
-  assert(isa(str, String))
-  s = desx(read(str))
+  assert(isa(str, AbstractString))
+  s = desx(Lisp.read(str))
   e = codegen(s)
   return e
 end
@@ -149,7 +149,7 @@ function repl(is, os)
   # repl loop
   while true
     print(os, prompt * " ")
-    input = desx(read(is))
+    input = desx(Lisp.read(is))
     res   = eval(input)
     println(res)
   end
