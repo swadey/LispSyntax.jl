@@ -62,6 +62,17 @@ end
 @expect desx(sx(:splice_seq, sx(1, 2, 3))) == Any[ :splice_seq, [1, 2, 3] ]
 @expect desx(sx(:splice_seq, sx(1, 2, sx(3)))) == Any[ :splice_seq, Any[ 1, 2, [3] ] ]
 
+@expect Lisp.read("""(defn multiline
+                           [x]
+                           (+ x 1))""") == sx(:defn, :multiline, sx(:x), sx(:+, :x, 1))
+
+@expect Lisp.read("""
+(defn f1 [n]
+   (if (< n 2)
+       1
+       (+ (f1 (- n 1))
+          (f1 (- n 2)))))
+""") == sx(:defn, :f1, sx(:n), sx(:if, sx(:<, :n, 2), 1, sx(:+, sx(:f1, sx(:-, :n, 1)), sx(:f1, sx(:-, :n, 2)))))
 # ----------------------------------------------------------------------------------------------------------------------
 # Code generation
 # ----------------------------------------------------------------------------------------------------------------------

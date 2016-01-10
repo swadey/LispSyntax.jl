@@ -35,7 +35,7 @@ expr.matcher = Nullable{ParserCombinator.Matcher}(doubley | floaty | inty | ucha
 #expr.matcher = doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | sexpr
 
 function read(str)
-  x = parse_try(str, expr)
+  x = parse_one(str, expr)
   #@debug " ***             parser returned = $x"
   x[1]
 end
