@@ -152,16 +152,10 @@ function lexpr(str)
   return e
 end
 
-function repl(is, os)
-  
-  # repl loop
-  while true
-    print(os, prompt * " ")
-    input = lispify(Lisp.read(is))
-    println(input)
-    res = eval(:(@lisp $input))
-    println(res)
-  end
+include("repl.jl")
+
+function __init__()
+  initrepl()
 end
 
 end # module
