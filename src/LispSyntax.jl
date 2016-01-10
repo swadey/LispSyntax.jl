@@ -130,21 +130,21 @@ end
 
 macro lisp(str)
   assert(isa(str, AbstractString))
-  s = desx(Lisp.read(str))
+  s = desx(LispSyntax.read(str))
   e = codegen(s)
   return e
 end
 
 macro lisp_str(str)
   assert(isa(str, AbstractString))
-  s = desx(Lisp.read(str))
+  s = desx(LispSyntax.read(str))
   e = codegen(s)
   return e
 end
 
 function lexpr(str)
   assert(isa(str, AbstractString))
-  s = desx(Lisp.read(str))
+  s = desx(LispSyntax.read(str))
   e = codegen(s)
   return e
 end

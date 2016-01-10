@@ -14,59 +14,59 @@ end
 # ----------------------------------------------------------------------------------------------------------------------
 # Reader
 # ----------------------------------------------------------------------------------------------------------------------
-@expect Lisp.read("1.1f") == 1.1f0
-@expect Lisp.read("1.2f") == 1.2f0
-@expect Lisp.read("2f")   == 2f0
+@expect LispSyntax.read("1.1f") == 1.1f0
+@expect LispSyntax.read("1.2f") == 1.2f0
+@expect LispSyntax.read("2f")   == 2f0
 
-@expect Lisp.read("3.0d") == 3.0
+@expect LispSyntax.read("3.0d") == 3.0
 
-@expect Lisp.read("4")    == 4
+@expect LispSyntax.read("4")    == 4
 
-@expect Lisp.read("\\u2312") == '\u2312'
+@expect LispSyntax.read("\\u2312") == '\u2312'
 
-@expect Lisp.read("\\040") == ' '
+@expect LispSyntax.read("\\040") == ' '
 
-@expect Lisp.read("\\c") == 'c'
+@expect LispSyntax.read("\\c") == 'c'
 
-@expect Lisp.read("\"test\"") == "test"
+@expect LispSyntax.read("\"test\"") == "test"
 
-@expect Lisp.read("true") == true
-@expect Lisp.read("false") == false
+@expect LispSyntax.read("true") == true
+@expect LispSyntax.read("false") == false
 
-@expect Lisp.read("test") == :test
+@expect LispSyntax.read("test") == :test
 
-@expect Lisp.read("()") == sx()
-@expect Lisp.read("(1.1f)") == sx(1.1f0)
-@expect Lisp.read("(1.1f 2.2f)") == sx(1.1f0, 2.2f0)
-@expect Lisp.read("(+ 1.1f 2)") == sx(:+, 1.1f0, 2)
-@expect Lisp.read("(this (+ 1.1f 2))") == sx(:this, sx(:+, 1.1f0, 2))
-@expect Lisp.read("(this (+ 1.1f 2) )") == sx(:this, sx(:+, 1.1f0, 2))
+@expect LispSyntax.read("()") == sx()
+@expect LispSyntax.read("(1.1f)") == sx(1.1f0)
+@expect LispSyntax.read("(1.1f 2.2f)") == sx(1.1f0, 2.2f0)
+@expect LispSyntax.read("(+ 1.1f 2)") == sx(:+, 1.1f0, 2)
+@expect LispSyntax.read("(this (+ 1.1f 2))") == sx(:this, sx(:+, 1.1f0, 2))
+@expect LispSyntax.read("(this (+ 1.1f 2) )") == sx(:this, sx(:+, 1.1f0, 2))
 
-@expect Lisp.read("#{1 2 3 4}") == Set([1, 2, 3, 4])
+@expect LispSyntax.read("#{1 2 3 4}") == Set([1, 2, 3, 4])
 
-@expect Lisp.read("{a 2 b 3}")  == Dict(:a => 2, :b => 3)
+@expect LispSyntax.read("{a 2 b 3}")  == Dict(:a => 2, :b => 3)
 
-@expect Lisp.read("[1 2 3 4]")  == sx(1, 2, 3, 4)
-@expect Lisp.read("[]")         == sx()
-@expect Lisp.read("[1]")        == sx(1)
+@expect LispSyntax.read("[1 2 3 4]")  == sx(1, 2, 3, 4)
+@expect LispSyntax.read("[]")         == sx()
+@expect LispSyntax.read("[1]")        == sx(1)
 
-@expect Lisp.read("'test")      == sx(:quote, :test)
+@expect LispSyntax.read("'test")      == sx(:quote, :test)
 
-@expect Lisp.read("`test")      == sx(:quasi, :test)
+@expect LispSyntax.read("`test")      == sx(:quasi, :test)
 
-@expect Lisp.read("~test")      == sx(:splice, :test)
-@expect Lisp.read("~@(1 2 3)")  == sx(:splice_seq, sx(1, 2, 3))
+@expect LispSyntax.read("~test")      == sx(:splice, :test)
+@expect LispSyntax.read("~@(1 2 3)")  == sx(:splice_seq, sx(1, 2, 3))
 
-@expect Lisp.read("`~test")     == sx(:quasi, sx(:splice, :test))
+@expect LispSyntax.read("`~test")     == sx(:quasi, sx(:splice, :test))
 
 @expect desx(sx(:splice_seq, sx(1, 2, 3))) == Any[ :splice_seq, [1, 2, 3] ]
 @expect desx(sx(:splice_seq, sx(1, 2, sx(3)))) == Any[ :splice_seq, Any[ 1, 2, [3] ] ]
 
-@expect Lisp.read("""(defn multiline
+@expect LispSyntax.read("""(defn multiline
                            [x]
                            (+ x 1))""") == sx(:defn, :multiline, sx(:x), sx(:+, :x, 1))
 
-@expect Lisp.read("""
+@expect LispSyntax.read("""
 (defn f1 [n]
    (if (< n 2)
        1
@@ -76,22 +76,22 @@ end
 # ----------------------------------------------------------------------------------------------------------------------
 # Code generation
 # ----------------------------------------------------------------------------------------------------------------------
-@expect codegen(desx(Lisp.read("(if true a)"))) == :(true && $(esc(:a)))
-@expect codegen(desx(Lisp.read("(if true a b)"))) == :(true ? $(esc(:a)) : $(esc(:b)))
+@expect codegen(desx(LispSyntax.read("(if true a)"))) == :(true && $(esc(:a)))
+@expect codegen(desx(LispSyntax.read("(if true a b)"))) == :(true ? $(esc(:a)) : $(esc(:b)))
 
-@expect codegen(desx(Lisp.read("(call)"))) == :($(esc(:call))())
-@expect codegen(desx(Lisp.read("(call a)"))) == :($(esc(:call))($(esc(:a))))
-@expect codegen(desx(Lisp.read("(call a b)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b))))
-@expect codegen(desx(Lisp.read("(call a b c)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b)), $(esc(:c))))
+@expect codegen(desx(LispSyntax.read("(call)"))) == :($(esc(:call))())
+@expect codegen(desx(LispSyntax.read("(call a)"))) == :($(esc(:call))($(esc(:a))))
+@expect codegen(desx(LispSyntax.read("(call a b)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b))))
+@expect codegen(desx(LispSyntax.read("(call a b c)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b)), $(esc(:c))))
 
-@expect codegen(desx(Lisp.read("(lambda (x) (call x))"))) == Expr(:function, :((x,)), Expr(:block, :($(esc(:call))(x))))
-@expect codegen(desx(Lisp.read("(def x 3)"))) == :($(esc(:x)) = 3)
-@expect codegen(desx(Lisp.read("(def x (+ 3 1))"))) == :($(esc(:x)) = $(esc(:+))(3, 1))
+@expect codegen(desx(LispSyntax.read("(lambda (x) (call x))"))) == Expr(:function, :((x,)), Expr(:block, :($(esc(:call))(x))))
+@expect codegen(desx(LispSyntax.read("(def x 3)"))) == :($(esc(:x)) = 3)
+@expect codegen(desx(LispSyntax.read("(def x (+ 3 1))"))) == :($(esc(:x)) = $(esc(:+))(3, 1))
 
-@expect codegen(desx(Lisp.read("'test"))) == :test
-@expect codegen(desx(Lisp.read("'(1 2)"))) == Any[ 1, 2 ]
-@expect codegen(desx(Lisp.read("'(1 2 a b)"))) == Any[ 1, 2, :a, :b ]
-@expect codegen(desx(Lisp.read("(call 1 '2)"))) == :($(esc(:call))(1, 2))
+@expect codegen(desx(LispSyntax.read("'test"))) == :test
+@expect codegen(desx(LispSyntax.read("'(1 2)"))) == Any[ 1, 2 ]
+@expect codegen(desx(LispSyntax.read("'(1 2 a b)"))) == Any[ 1, 2, :a, :b ]
+@expect codegen(desx(LispSyntax.read("(call 1 '2)"))) == :($(esc(:call))(1, 2))
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Scope and variables
