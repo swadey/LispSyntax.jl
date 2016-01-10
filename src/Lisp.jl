@@ -3,9 +3,6 @@ include("parser.jl")
 export sx, desx, codegen, @lisp, repl, @lisp_str
 # TODO: lexpr needs to be fixed prior to exposure
 
-# Konstants
-const prompt = "cl>"
-
 # Internal types
 type s_expr
   vector
