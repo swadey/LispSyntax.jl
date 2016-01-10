@@ -1,4 +1,4 @@
-module Lisp
+module LispSyntax
 include("parser.jl")
 export sx, desx, codegen, @lisp, @lisp_str
 # TODO: lexpr needs to be fixed prior to exposure
