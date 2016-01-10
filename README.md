@@ -1,9 +1,9 @@
-Lisp.jl: A clojure-like lisp syntax for julia
-=============================================
+LispSyntax.jl: A clojure-like lisp syntax for julia
+===================================================
 
-[![Join the chat at https://gitter.im/swadey/Lisp.jl](https://badges.gitter.im/swadey/Lisp.jl.svg)](https://gitter.im/swadey/Lisp.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/swadey/LispSyntax.jl](https://badges.gitter.im/swadey/LispSyntax.jl.svg)](https://gitter.im/swadey/LispSyntax.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[Build Status](https://travis-ci.org/swadey/Lisp.jl.svg?branch=master)
+[Build Status](https://travis-ci.org/swadey/LispSyntax.jl.svg?branch=master)
 
 This package provides a julia-to-lisp syntax translator with
 convenience macros that let you do this: 
@@ -14,13 +14,13 @@ lisp"(defn fib [a] (if (< a 2) a (+ (fib (- a 1)) (fib (- a 2)))))"
 @test fib(30)        == 832040 
 ```
 
-Lisp.jl is implemented as an expression translator between
+LispSyntax.jl is implemented as an expression translator between
 lisp/clojure-like syntax and julia's AST.  Julia's compiler, JIT and
 multiple-dispatch infrastructure is used for code generation and
-execution. Because of this, Lisp.jl is not really clojure or lisp in
+execution. Because of this, LispSyntax.jl is not really clojure or lisp in
 most meaningful ways.  The semantics are entirely julia-based (which
 are very similar to scheme/lisp in many ways).  The net result is that
-Lisp.jl is really an alternative S-expression-like syntax for julia,
+LispSyntax.jl is really an alternative S-expression-like syntax for julia,
 not an implemention of clojure or lisp.
 
 Special Forms
@@ -44,7 +44,7 @@ Notable Differences
 
 - *Symbol names cannot have -, \*, /, ? ...* - Julia symbol naming is used for
    everything, as a result, Julia syntax restrictions are maintained
-   in `Lisp.jl`.
+   in `LispSyntax.jl`.
 - *Reference to global variables in function scopes* - Julia requires
    declaration of global symbols that are referenced in function
    scope.  Because of this functions need to declare which symbols are
@@ -61,11 +61,11 @@ Notable Differences
 - *Method definition* - Also not currently implemented.  If
    implemented it will probably not be a full implementation of
    Clojure's sophisticated dispatch system.
-- *Macros differences* - Macros defined in `Lisp.jl` look like
+- *Macros differences* - Macros defined in `LispSyntax.jl` look like
    standard Lisp macros but because expressions are special objects in
    julia, S-expressions returned from macros require a special
    translation step to generate julia expression trees.  The result is
-   that `Lisp.jl` macros are directly translated into Julia macros and
+   that `LispSyntax.jl` macros are directly translated into Julia macros and
    must be called via special syntax (e.g. `(@macro expr)`).
 - *Julia's string macro dispatch not supported (yet)* - for macros
    like `@r_str` which in Julia can be called via `r""`, it is
