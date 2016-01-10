@@ -2,7 +2,7 @@ LispSyntax.jl: A clojure-like lisp syntax for julia
 ===================================================
 
 [![Join the chat at https://gitter.im/swadey/LispSyntax.jl](https://badges.gitter.im/swadey/LispSyntax.jl.svg)](https://gitter.im/swadey/LispSyntax.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[Build Status](https://travis-ci.org/swadey/LispSyntax.jl.svg?branch=master)
+![Build Status](https://travis-ci.org/swadey/LispSyntax.jl.svg?branch=master)
 
 This package provides a julia-to-lisp syntax translator with
 convenience macros that let you do this: 
