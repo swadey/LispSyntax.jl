@@ -149,10 +149,4 @@ function lexpr(str)
   return e
 end
 
-include("repl.jl")
-
-function __init__()
-  initrepl()
-end
-
 end # module
