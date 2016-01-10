@@ -102,7 +102,7 @@ lisp"(def w (+ 3 1))"
 @expect @lisp("`(~x ~x)") == Any[ 10, 10 ]
 global y = Any[ 1, 2 ]
 @expect @lisp("`(~x ~@y)") == Any[ 10, 1, 2 ]
-@expect @lisp("`(~x ~y)") == Any[ 10, {1, 2} ]
+@expect @lisp("`(~x ~y)") == Any[ 10, Any[1, 2] ]
 
 @expect @lisp("`(10 ~(+ 10 x))") == Any[10, 20]
 

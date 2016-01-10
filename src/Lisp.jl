@@ -1,7 +1,7 @@
 module Lisp
 include("parser.jl")
-#include(pegparser.jl")
-export sx, desx, codegen, @lisp, repl, @lisp_str, lexpr
+export sx, desx, codegen, @lisp, repl, @lisp_str
+# TODO: lexpr needs to be fixed prior to exposure
 
 # Konstants
 const prompt = "cl>"
@@ -20,6 +20,14 @@ function desx(s)
     return map(desx, s.vector)
   else
     return s
+  end
+end
+
+function lispify(s)
+  if isa(s, s_expr)
+    return "(" * join(map(lispify, s.vector), " ") * ")"
+  else
+    return "$s"
   end
 end
 
@@ -149,8 +157,9 @@ function repl(is, os)
   # repl loop
   while true
     print(os, prompt * " ")
-    input = desx(Lisp.read(is))
-    res   = eval(input)
+    input = lispify(Lisp.read(is))
+    println(input)
+    res = eval(:(@lisp $input))
     println(res)
   end
 end
