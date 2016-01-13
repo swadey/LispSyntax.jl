@@ -101,12 +101,6 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     Expr(:global, map(x -> esc(x), s[2:end])...)
   elseif s[1] == :quote
     quote_it(s[2])
-    #QuoteNode(s[2])
-    # if isa(s[2], Symbol)
-    #   QuoteNode(s[2])
-    # else
-    #   s[2]
-    # end
   elseif s[1] == :import
      Expr(:using, map(x -> esc(x), s[2:end])...)
   elseif s[1] == :splice
