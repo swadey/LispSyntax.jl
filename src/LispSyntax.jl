@@ -1,3 +1,5 @@
+__precompile__()
+
 module LispSyntax
 include("parser.jl")
 export sx, desx, codegen, @lisp, @lisp_str
