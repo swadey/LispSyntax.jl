@@ -73,6 +73,7 @@ end
        (+ (f1 (- n 1))
           (f1 (- n 2)))))
 """) == sx(:defn, :f1, sx(:n), sx(:if, sx(:<, :n, 2), 1, sx(:+, sx(:f1, sx(:-, :n, 1)), sx(:f1, sx(:-, :n, 2)))))
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Code generation
 # ----------------------------------------------------------------------------------------------------------------------
@@ -88,9 +89,12 @@ end
 @expect codegen(desx(LispSyntax.read("(def x 3)"))) == :($(esc(:x)) = 3)
 @expect codegen(desx(LispSyntax.read("(def x (+ 3 1))"))) == :($(esc(:x)) = $(esc(:+))(3, 1))
 
-@expect codegen(desx(LispSyntax.read("'test"))) == :test
-@expect codegen(desx(LispSyntax.read("'(1 2)"))) == Any[ 1, 2 ]
-@expect codegen(desx(LispSyntax.read("'(1 2 a b)"))) == Any[ 1, 2, :a, :b ]
+@expect codegen(desx(LispSyntax.read("test"))) == :($(esc(:test)))
+@expect codegen(desx(LispSyntax.read("'test"))) == QuoteNode(:test)
+@expect codegen(desx(LispSyntax.read("'(1 2)"))) == :(construct_sexpr(1, 2))
+@expect codegen(desx(LispSyntax.read("'(1 x)"))) == :(construct_sexpr(1, :x))
+@expect codegen(desx(LispSyntax.read("'(1 (1 2))"))) == :(construct_sexpr(1, construct_sexpr(1, 2)))
+@expect codegen(desx(LispSyntax.read("'(1 (test x))"))) == :(construct_sexpr(1, construct_sexpr(:test, :x)))
 @expect codegen(desx(LispSyntax.read("(call 1 '2)"))) == :($(esc(:call))(1, 2))
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -108,6 +112,11 @@ lisp"(def w (+ 3 1))"
 # ----------------------------------------------------------------------------------------------------------------------
 @expect @lisp("`~x") == 10
 @expect lisp"`~x" == 10
+@expect lisp"'test" == :test
+@expect lisp"'(1 2)" == Any[1, 2]
+@expect lisp"'(1 x)" == Any[1, :x]
+@expect lisp"'(1 (1 2))" == Any[1, Any[1, 2]]
+@expect lisp"'(1 (test x))" == Any[1, Any[:test, :x]]
 @expect @lisp("`(test ~x)") == Any[ :test, 10 ]
 @expect lisp"`(test ~x)" == Any[ :test, 10 ]
 @expect @lisp("`(~x ~x)") == Any[ 10, 10 ]

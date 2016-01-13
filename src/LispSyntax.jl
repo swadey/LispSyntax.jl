@@ -50,6 +50,16 @@ function quasiquote(s, escape_exceptions)
   end
 end
 
+function quote_it(s)
+  if isa(s, Array)
+    Expr(:call, :construct_sexpr, map(s -> quote_it(s), s)...)
+  elseif isa(s, Symbol)
+   QuoteNode(s)
+  else
+    s
+  end
+end
+
 function codegen(s; escape_exceptions = Set{Symbol}())
   if isa(s, Symbol)
     if s in escape_exceptions
@@ -90,7 +100,13 @@ function codegen(s; escape_exceptions = Set{Symbol}())
   elseif s[1] == :global
     Expr(:global, map(x -> esc(x), s[2:end])...)
   elseif s[1] == :quote
-    s[2]
+    quote_it(s[2])
+    #QuoteNode(s[2])
+    # if isa(s[2], Symbol)
+    #   QuoteNode(s[2])
+    # else
+    #   s[2]
+    # end
   elseif s[1] == :import
      Expr(:using, map(x -> esc(x), s[2:end])...)
   elseif s[1] == :splice
