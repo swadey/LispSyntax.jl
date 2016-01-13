@@ -217,3 +217,19 @@ lisp"(do (@incr r) (@incr number))"
 # ----------------------------------------------------------------------------------------------------------------------
 lisp"(import ParserCombinator)"
 @expect lisp"(@E_str \"S\")" == E"S"
+
+#
+# Bug reports
+#
+@expect lisp"""(def game_map (Dict
+          (=> 'living_room
+              '((you are in the living room
+                 of a wizards house - there is a wizard
+                 snoring loudly on the couch -)
+                (west door garden)
+                (upstairs stairway attic)))))""" == Dict(:living_room =>
+                                                         Any[ Any[ :you, :are, :in, :the, :living, :room, :of, :a, :wizards, :house, :-,
+                                                                   :there, :is, :a, :wizard, :snoring, :loudly, :on, :the, :couch, :- ],
+                                                              Any[ :west, :door, :garden ],
+                                                              Any[ :upstairs, :stairway, :attic ] ])
+
