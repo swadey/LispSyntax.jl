@@ -44,9 +44,25 @@ end
 
 @expect LispSyntax.read("#{1 2 3 4}") == Set([1, 2, 3, 4])
 
-@expect LispSyntax.read("{a 2 b 3}")  == Dict(:a => 2, :b => 3)
+@expect LispSyntax.read("""#{
+                        1 2 
+                        3 4
+                        }""") == Set([1, 2, 3, 4])
+
+@expect LispSyntax.read("{a 2 b 3}") == Dict(:a => 2, :b => 3)
+
+@expect LispSyntax.read("""{
+                        a 2 
+                        b 3
+                        }""") == Dict(:a => 2, :b => 3)
 
 @expect LispSyntax.read("[1 2 3 4]")  == sx(1, 2, 3, 4)
+
+@expect LispSyntax.read("""[
+                        1 2 
+                        3 4
+                        ]""")  == sx(1, 2, 3, 4)
+
 @expect LispSyntax.read("[]")         == sx()
 @expect LispSyntax.read("[1]")        == sx(1)
 

@@ -22,9 +22,9 @@ symboly      = p"[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" > symbol
 macrosymy    = p"@[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" > symbol
 
 sexpr        = E"(" + ~opt_ws + Repeat(expr + ~opt_ws) + E")" |> (x -> s_expr(x))
-hashy        = E"#{" + Repeat(expr + ~opt_ws) + E"}" |> (x -> Set(x))
-curly        = E"{" + Repeat(expr + ~opt_ws) + E"}" |> (x -> [ x[i] => x[i+1] for i = 1:2:length(x) ])
-bracket      = E"[" + Repeat(expr + ~opt_ws) + E"]" |> (x -> s_expr(x)) # TODO: not quite right
+hashy        = E"#{" + ~opt_ws + Repeat(expr + ~opt_ws) + E"}" |> (x -> Set(x))
+curly        = E"{" + ~opt_ws + Repeat(expr + ~opt_ws) + E"}" |> (x -> [ x[i] => x[i+1] for i = 1:2:length(x) ])
+bracket      = E"[" + ~opt_ws + Repeat(expr + ~opt_ws) + E"]" |> (x -> s_expr(x)) # TODO: not quite right
 quot         = E"'" + expr > (x -> sx(:quote, x))
 quasi        = E"`" + expr > (x -> sx(:quasi, x))
 tildeseq     = E"~@" + expr > (x -> sx(:splice_seq, x))
