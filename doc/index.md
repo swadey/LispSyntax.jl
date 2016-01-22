@@ -58,6 +58,13 @@ After loading the `LispREPL`, type `)` and the `julia>` prompt will change in pl
 ```julia
 lisp> (println "Hello World!")
 Hello World!
+
+lisp> (defn hello [name]
+          (println (string "Hello " name "!")))
+hello (generic function with 1 method)
+
+lisp> (hello "Julia")
+Hello Julia!
 ```
 
 * Type `CTRL + C` to get back to the `julia>` prompt:
@@ -67,6 +74,4 @@ lisp> ^C
 
 julia>
 ```
-    
-
 
