@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Lispsyntax.jl by swadey</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/swadey/LispSyntax.jl">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/swadey/LispSyntax.jl/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/swadey/LispSyntax.jl/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Lispsyntax.jl</h1>
+          <p>lisp-like syntax for julia</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/swadey">swadey</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>
+<a id="lispsyntaxjl-a-clojure-like-lisp-syntax-for-julia" class="anchor" href="#lispsyntaxjl-a-clojure-like-lisp-syntax-for-julia" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>LispSyntax.jl: A clojure-like lisp syntax for julia</h1>
+
+<p><a href="https://gitter.im/swadey/LispSyntax.jl?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/swadey/LispSyntax.jl.svg" alt="Join the chat at https://gitter.im/swadey/LispSyntax.jl"></a>
+<img src="https://travis-ci.org/swadey/LispSyntax.jl.svg?branch=master" alt="Build Status"></p>
+
+<p>This package provides a julia-to-lisp syntax translator with
+convenience macros that let you do this: </p>
+
+<div class="highlight highlight-source-julia"><pre><span class="pl-s"><span class="pl-pds">lisp"</span>(defn fib [a] (if (&lt; a 2) a (+ (fib (- a 1)) (fib (- a 2)))))<span class="pl-pds">"</span></span> 
+<span class="pl-c1">@test</span> <span class="pl-s"><span class="pl-pds">lisp"</span>(fib 30)<span class="pl-pds">"</span></span> <span class="pl-k">==</span> <span class="pl-c1">832040</span> 
+<span class="pl-c1">@test</span> <span class="pl-c1">fib</span>(<span class="pl-c1">30</span>)        <span class="pl-k">==</span> <span class="pl-c1">832040</span> </pre></div>
+
+<p>LispSyntax.jl is implemented as an expression translator between
+lisp/clojure-like syntax and julia's AST.  Julia's compiler, JIT and
+multiple-dispatch infrastructure is used for code generation and
+execution. Because of this, LispSyntax.jl is not really clojure or lisp in
+most meaningful ways.  The semantics are entirely julia-based (which
+are very similar to scheme/lisp in many ways).  The net result is that
+LispSyntax.jl is really an alternative S-expression-like syntax for julia,
+not an implemention of clojure or lisp.</p>
+
+<h2>
+<a id="special-forms" class="anchor" href="#special-forms" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Special Forms</h2>
+
+<ul>
+<li><code>(def symbol init)</code></li>
+<li><code>(quote form)</code></li>
+<li><code>(defn symbol [param*] expr*)</code></li>
+<li><code>(defmacro symbol [param*] expr*)</code></li>
+<li>
+<code>(lambda [param*] expr*)</code>`</li>
+<li>
+<code>(fn [param*] expr*)</code>`</li>
+<li><code>(let [binding*] expr*)</code></li>
+<li><code>(global symbol*)</code></li>
+<li><code>(while test expr*)</code></li>
+<li><code>(for [binding*] expr*)</code></li>
+<li><code>(import package*)</code></li>
+</ul>
+
+<h2>
+<a id="notable-differences" class="anchor" href="#notable-differences" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Notable Differences</h2>
+
+<ul>
+<li>
+<em>Symbol names cannot have -, \</em>, /, ? ...* - Julia symbol naming is used for
+everything, as a result, Julia syntax restrictions are maintained
+in <code>LispSyntax.jl</code>.</li>
+<li>
+<em>Reference to global variables in function scopes</em> - Julia requires
+declaration of global symbols that are referenced in function
+scope.  Because of this functions need to declare which symbols are
+global.  This is done via the special form <code>(global symbol*)</code>.</li>
+<li>
+<em>Binding forms not implemented</em> - Clojure has very awesome
+destructuring binds that can used in most special forms requiring
+bindings (e.g. <code>let</code>, <code>fn</code> parameter lists, etc.).  This is not
+currently implemented.</li>
+<li>
+<em>Lack of loop/recur</em> - Currently, this is not implemented.  As with
+Clojure, julia does not currently support TCO, so something like
+this may be needed (but a macro-implementation of tail call rewriting may be
+more appropriate for julia).</li>
+<li>
+<em>Optional typing</em> - Currently not implemented.</li>
+<li>
+<em>Method definition</em> - Also not currently implemented.  If
+implemented it will probably not be a full implementation of
+Clojure's sophisticated dispatch system.</li>
+<li>
+<em>Macros differences</em> - Macros defined in <code>LispSyntax.jl</code> look like
+standard Lisp macros but because expressions are special objects in
+julia, S-expressions returned from macros require a special
+translation step to generate julia expression trees.  The result is
+that <code>LispSyntax.jl</code> macros are directly translated into Julia macros and
+must be called via special syntax (e.g. <code>(@macro expr)</code>).</li>
+<li>
+<em>Julia's string macro dispatch not supported (yet)</em> - for macros
+like <code>@r_str</code> which in Julia can be called via <code>r""</code>, it is
+currently necessary to call these via standard macro syntax:
+<code>(@r_str "string")</code>
+</li>
+</ul>
+
+<h2>
+<a id="todo" class="anchor" href="#todo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>TODO</h2>
+
+<ul>
+<li>Support for exceptions: this is straight forward but not currently implemented.</li>
+<li>Optional typing to support method definition</li>
+<li>Structs and aggregate types</li>
+<li>Special dispatch for string macro forms</li>
+<li>Modules</li>
+<li>import vs. using vs. include -- only <code>using</code> is currently
+implemented and confusingly, it matches Clojure's import form.</li>
+<li>varargs and named arguments</li>
+</ul>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
