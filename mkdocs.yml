@@ -1,0 +1,7 @@
+site_name: LispSyntax.jl
+site_author: @swadey, et al.
+repo_url: https://github.com/swadey/LispSyntax.jl
+theme: readthedocs
+docs_dir: 'doc'
+pages:
+- ['index.md', 'Index']
