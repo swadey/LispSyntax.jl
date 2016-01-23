@@ -32,10 +32,8 @@ tilde        = E"~" + expr > (x -> sx(:splice, x))
 
 expr.matcher = Nullable{ParserCombinator.Matcher}(doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | macrosymy | sexpr |
                                                   hashy | curly | bracket | quot | quasi | tildeseq | tilde)
-#expr.matcher = doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | sexpr
 
 function read(str)
   x = parse_one(str, expr)
-  #@debug " ***             parser returned = $x"
   x[1]
 end
