@@ -1,5 +1,5 @@
 site_name: LispSyntax.jl
-site_author: @swadey, et al.
+site_author: swadey
 repo_url: https://github.com/swadey/LispSyntax.jl
 theme: readthedocs
 docs_dir: 'doc'
