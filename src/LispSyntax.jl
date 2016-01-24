@@ -155,18 +155,18 @@ function codegen(s; escape_exceptions = Set{Symbol}())
   end
 end
 
-macro lisp(str)
-  assert(isa(str, AbstractString))
+"This is an internal helper function, do not call outside of package"
+function lisp_eval_helper(str :: AbstractString)
   s = desx(LispSyntax.read(str))
-  e = codegen(s)
-  return e
+  return codegen(s)
+end
+    
+macro lisp(str)
+  return lisp_eval_helper(str)
 end
 
 macro lisp_str(str)
-  assert(isa(str, AbstractString))
-  s = desx(LispSyntax.read(str))
-  e = codegen(s)
-  return e
+  return lisp_eval_helper(str)
 end
 
 end # module
