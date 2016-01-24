@@ -3,7 +3,6 @@ __precompile__()
 module LispSyntax
 include("parser.jl")
 export sx, desx, codegen, @lisp, @lisp_str
-# TODO: lexpr needs to be fixed prior to exposure
 
 # Internal types
 type s_expr
@@ -148,13 +147,6 @@ macro lisp(str)
 end
 
 macro lisp_str(str)
-  assert(isa(str, AbstractString))
-  s = desx(LispSyntax.read(str))
-  e = codegen(s)
-  return e
-end
-
-function lexpr(str)
   assert(isa(str, AbstractString))
   s = desx(LispSyntax.read(str))
   e = codegen(s)
