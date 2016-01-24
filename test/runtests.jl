@@ -179,6 +179,7 @@ lisp"(def dostuff2 (lambda [a] (@incr a) (@incr a) (@incr a)))"
 lisp"(def dostuff3 (fn [a] (@incr a) (@incr a) (@incr a)))"
 @expect lisp"(dostuff3 3)" == 6
 @expect lisp"(dostuff3 6)" == 9
+@expect lisp"((lambda [x] (+ x 1)) 5)" == 6
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Macros
