@@ -2,7 +2,7 @@ __precompile__()
 
 module LispSyntax
 include("parser.jl")
-export sx, desx, codegen, @lisp, @lisp_str
+export sx, desx, codegen, @lisp, @lisp_str, assign_reader_dispatch
 
 # Internal types
 type s_expr
@@ -16,6 +16,10 @@ sx(x...) = s_expr([x...])
 function desx(s)
   if typeof(s) == s_expr
     return map(desx, s.vector)
+  elseif isa(s, Dict)
+    return Dict(map(x -> desx(x[1]) => desx(x[2]), s)...)
+  elseif isa(s, Set)
+    return Set(map(desx, s))
   else
     return s
   end
@@ -35,6 +39,10 @@ function construct_sexpr(items...) # convert the input tuple to an array
     ret[i] = items[i]
   end
   ret
+end
+
+function assign_reader_dispatch(sym, fn)
+  reader_table[sym] = fn
 end
 
 function quasiquote(s, escape_exceptions)
@@ -68,6 +76,14 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     else
       esc(s)
     end
+  elseif isa(s, Dict)
+    coded_s = map(x -> Expr(symbol("=>"),
+                            codegen(x[1], escape_exceptions = escape_exceptions),
+                            codegen(x[2], escape_exceptions = escape_exceptions)), s)
+    Expr(:call, :Dict, coded_s...)
+  elseif isa(s, Set)
+    coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions), s)
+    Expr(:call, :Set, Expr(:vect, coded_s...))
   elseif !isa(s, Array) # constant
     s
   elseif length(s) == 0 # empty array

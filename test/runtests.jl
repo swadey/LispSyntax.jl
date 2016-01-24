@@ -90,6 +90,11 @@ end
           (f1 (- n 2)))))
 """) == sx(:defn, :f1, sx(:n), sx(:if, sx(:<, :n, 2), 1, sx(:+, sx(:f1, sx(:-, :n, 1)), sx(:f1, sx(:-, :n, 2)))))
 
+assign_reader_dispatch(:sx, x -> sx(x.vector...))
+assign_reader_dispatch(:hash, x -> [ x.vector[i] => x.vector[i+1] for i = 1:2:length(x.vector) ])
+@expect LispSyntax.read("#sx[a b c]") == sx(:a, :b, :c)
+@expect LispSyntax.read("#sx [ 1 2 3 ]") == sx(1, 2, 3)
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Code generation
 # ----------------------------------------------------------------------------------------------------------------------
@@ -180,6 +185,10 @@ lisp"(def dostuff3 (fn [a] (@incr a) (@incr a) (@incr a)))"
 @expect lisp"(dostuff3 3)" == 6
 @expect lisp"(dostuff3 6)" == 9
 @expect lisp"((lambda [x] (+ x 1)) 5)" == 6
+@expect lisp"#{1 2 z}" == Set([1, 2, 10])
+@expect lisp"{1 2 2 z}" == Dict(1 => 2, 2 => 10)
+@expect lisp"#sx[+ 1 2]" == 3
+@expect lisp"#hash['+ 1 '- z]" == Dict(:+ => 1, :- => 10)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Macros

@@ -1,6 +1,8 @@
 using ParserCombinator, Compat
 import Base.==
 
+reader_table = Dict{Symbol, Function}()
+
 expr         = Delayed()
 floaty_dot   = p"[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?[Ff]" > (x -> parse(Float32, x[1:end-1]))
 floaty_nodot = p"[-+]?[0-9]*[0-9]+([eE][-+]?[0-9]+)?[Ff]" > (x -> parse(Float32, x[1:end-1]))
@@ -24,14 +26,15 @@ macrosymy    = p"@[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" > symbol
 sexpr        = E"(" + ~opt_ws + Repeat(expr + ~opt_ws) + E")" |> (x -> s_expr(x))
 hashy        = E"#{" + ~opt_ws + Repeat(expr + ~opt_ws) + E"}" |> (x -> Set(x))
 curly        = E"{" + ~opt_ws + Repeat(expr + ~opt_ws) + E"}" |> (x -> [ x[i] => x[i+1] for i = 1:2:length(x) ])
+dispatchy    = E"#" + symboly + ~opt_ws + expr |> (x -> reader_table[x[1]](x[2]))
 bracket      = E"[" + ~opt_ws + Repeat(expr + ~opt_ws) + E"]" |> (x -> s_expr(x)) # TODO: not quite right
 quot         = E"'" + expr > (x -> sx(:quote, x))
 quasi        = E"`" + expr > (x -> sx(:quasi, x))
 tildeseq     = E"~@" + expr > (x -> sx(:splice_seq, x))
 tilde        = E"~" + expr > (x -> sx(:splice, x))
 
-expr.matcher = Nullable{ParserCombinator.Matcher}(doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | macrosymy | sexpr |
-                                                  hashy | curly | bracket | quot | quasi | tildeseq | tilde)
+expr.matcher = Nullable{ParserCombinator.Matcher}(doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | macrosymy | dispatchy |
+                                                  sexpr | hashy | curly | bracket | quot | quasi | tildeseq | tilde)
 
 function read(str)
   x = parse_one(str, expr)
