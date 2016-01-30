@@ -160,6 +160,18 @@ As you probably guessed, this last expression with `def` means to assign the var
 
 See? Not too hard!
 
+These operations were all done with Int64 integers. As LispSyntax preserves Julias types you can also use Float64 and Float32. At present they need to be written as `3.0d` and `3.0f` respectively, though this will likely change towards the same behavior as in the usual Julia.
+```julia
+lisp> (+ 1.0d 2.0d)
+3.0
+lisp> (+ 1.0f 2.0d)
+3.0
+lisp> (typeof 1.0d)
+Float64
+lisp (typeof 1.0f)
+Float32
+```
+
 This is the basic premise of Lisp. Lisp stands for “list processing”; this means that the structure of the program is actually lists of lists. (If you’re familiar with Julia vectors, imagine the entire same structure as above but with square brackets instead, any you’ll be able to see the structure above as both a program and a datastructure.) This is easier to understand with more examples, so let’s write a simple Julia program, test it, and then show the equivalent `LispSyntax` program:
 
 ```julia
