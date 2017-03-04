@@ -102,7 +102,7 @@ lisp> (+ 1 3)
 4
 ```
 
-Wich would return `4` and would be equivalent of:
+Which would return `4` and would be equivalent of:
 
 ```julia
 lisp> (+ 1 3)
@@ -144,7 +144,7 @@ result = 46 - 8
 result = 38
 ```
 
-Now let's try the same thing in ``LispSuntax:
+Now let's try the same thing in `LispSyntax`:
 
 ```julia
 (def result (- (/ (+ 1 3 88) 2) 8))
