@@ -29,8 +29,8 @@ Special Forms
 - `(quote form)`
 - `(defn symbol [param*] expr*)`
 - `(defmacro symbol [param*] expr*)`
-- `(lambda [param*] expr*)``
-- `(fn [param*] expr*)``
+- `(lambda [param*] expr*)`
+- `(fn [param*] expr*)`
 - `(let [binding*] expr*)`
 - `(global symbol*)`
 - `(while test expr*)`
