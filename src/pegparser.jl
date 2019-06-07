@@ -1,3 +1,5 @@
+# PEGParser is a dead package. See parser.jl instead.
+
 using PEGParser
 
 @grammar lisp_grammar begin
