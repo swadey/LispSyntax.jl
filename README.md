@@ -95,7 +95,7 @@ fib (generic function with 1 method)
 55
 ```
 to go back to vanilla julia, simply press the backspace button or `Ctr-C`
-```
+```julia
 julia> fib
 fib (generic function with 1 method)
 
