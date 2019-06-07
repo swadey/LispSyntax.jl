@@ -1,5 +1,6 @@
 name = "LispSyntax"
 uuid = "51c06dcf-91d3-5c9e-a52e-02df4e7cbcf5"
+version = "0.2.0"
 
 [deps]
 ParserCombinator = "fae87a5f-d1ad-5cf0-8f61-c941e1580b46"
