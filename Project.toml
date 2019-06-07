@@ -1,0 +1,15 @@
+name = "LispSyntax"
+uuid = "51c06dcf-91d3-5c9e-a52e-02df4e7cbcf5"
+
+[deps]
+ParserCombinator = "fae87a5f-d1ad-5cf0-8f61-c941e1580b46"
+
+[compat]
+ParserCombinator = "≥ 2.0.0"
+julia = "≥ 1.0.0"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

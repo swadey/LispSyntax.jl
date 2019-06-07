@@ -1,11 +1,10 @@
-__precompile__()
-
 module LispSyntax
+
 include("parser.jl")
 export sx, desx, codegen, @lisp, @lisp_str, assign_reader_dispatch
 
 # Internal types
-type s_expr
+mutable struct s_expr
   vector
 end
 
@@ -33,13 +32,8 @@ function lispify(s)
   end
 end
 
-function construct_sexpr(items...) # convert the input tuple to an array
-  ret = Array(Any, length(items))
-  for i = 1:length(items)
-    ret[i] = items[i]
-  end
-  ret
-end
+# convert the input tuple to an array
+construct_sexpr(items...) = Any[items...]
 
 function assign_reader_dispatch(sym, fn)
   reader_table[sym] = fn
@@ -77,7 +71,7 @@ function codegen(s; escape_exceptions = Set{Symbol}())
       esc(s)
     end
   elseif isa(s, Dict)
-    coded_s = map(x -> Expr(symbol("=>"),
+    coded_s = map(x -> Expr(Symbol("=>"),
                             codegen(x[1], escape_exceptions = escape_exceptions),
                             codegen(x[2], escape_exceptions = escape_exceptions)), s)
     Expr(:call, :Dict, coded_s...)
@@ -97,7 +91,7 @@ function codegen(s; escape_exceptions = Set{Symbol}())
       throw("illegal if statement $s")
     end
   elseif s[1] == :def
-    assert(length(s) == 3)
+    length(s) == 3 || error("Malformed def: Length of list must be == 3")
     :($(esc(s[2])) = $(codegen(s[3], escape_exceptions = escape_exceptions)))
   elseif s[1] == :let
     syms     = Set([ s[2][i] for i = 1:2:length(s[2]) ])
@@ -127,7 +121,7 @@ function codegen(s; escape_exceptions = Set{Symbol}())
   elseif s[1] == :quasi
     quasiquote(s[2], escape_exceptions)
   elseif s[1] == :lambda || s[1] == :fn
-    assert(length(s) >= 3)
+    length(s) >= 3 || error("Malformed lambda/fn: list length must be >= 3")
     coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions ∪ Set(s[2])), s[3:end])
     Expr(:function, Expr(:tuple, s[2]...), Expr(:block, coded_s...))
   elseif s[1] == :defn
@@ -146,9 +140,9 @@ function codegen(s; escape_exceptions = Set{Symbol}())
     # TODO
   else
     coded_s = map(x -> codegen(x, escape_exceptions = escape_exceptions), s)
-    if (typeof(coded_s[1]) == Symbol && ismatch(r"^@.*$", string(coded_s[1]))) ||
-       (typeof(coded_s[1]) == Expr && ismatch(r"^@.*$", string(coded_s[1].args[1])))
-      Expr(:macrocall, coded_s[1], coded_s[2:end]...)
+    if (typeof(coded_s[1]) == Symbol && occursin(r"^@.*$", string(coded_s[1]))) ||
+       (typeof(coded_s[1]) == Expr && occursin(r"^@.*$", string(coded_s[1].args[1])))
+      Expr(:macrocall, coded_s[1], nothing, coded_s[2:end]...)
     else
       Expr(:call, coded_s[1], coded_s[2:end]...)
     end

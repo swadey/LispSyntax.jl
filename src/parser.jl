@@ -1,4 +1,4 @@
-using ParserCombinator, Compat
+using ParserCombinator
 import Base.==
 
 reader_table = Dict{Symbol, Function}()
@@ -14,18 +14,18 @@ doubley      = p"[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?[dD]" > (x -> parse(Float
 
 inty         = p"[-+]?\d+" > (x -> parse(Int, x))
 
-uchary       = p"\\(u[\da-fA-F]{4})" > (x -> begin y = unescape_string(x); y[chr2ind(y, 1)] end)
+uchary       = p"\\(u[\da-fA-F]{4})" > (x -> first(unescape_string(x)))
 achary       = p"\\[0-7]{3}" > (x -> unescape_string(x)[1])
 chary        = p"\\." > (x -> x[2])
 
 stringy      = p"(?<!\\)\".*?(?<!\\)\"" > (x -> x[2:end-1]) #_0[2:end-1] } #r"(?<!\\)\".*?(?<!\\)"
 booly        = p"(true|false)" > (x -> x == "true" ? true : false)
-symboly      = p"[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" > symbol
-macrosymy    = p"@[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" > symbol
+symboly      = p"[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" > Symbol
+macrosymy    = p"@[^\d(){}#'`,@~;~\[\]^\s][^\s()#'`,@~;^{}~\[\]]*" > Symbol
 
 sexpr        = E"(" + ~opt_ws + Repeat(expr + ~opt_ws) + E")" |> (x -> s_expr(x))
 hashy        = E"#{" + ~opt_ws + Repeat(expr + ~opt_ws) + E"}" |> (x -> Set(x))
-curly        = E"{" + ~opt_ws + Repeat(expr + ~opt_ws) + E"}" |> (x -> [ x[i] => x[i+1] for i = 1:2:length(x) ])
+curly        = E"{" + ~opt_ws + Repeat(expr + ~opt_ws) + E"}" |> (x -> Dict(x[i] => x[i+1] for i = 1:2:length(x)))
 dispatchy    = E"#" + symboly + ~opt_ws + expr |> (x -> reader_table[x[1]](x[2]))
 bracket      = E"[" + ~opt_ws + Repeat(expr + ~opt_ws) + E"]" |> (x -> s_expr(x)) # TODO: not quite right
 quot         = E"'" + expr > (x -> sx(:quote, x))
@@ -33,8 +33,9 @@ quasi        = E"`" + expr > (x -> sx(:quasi, x))
 tildeseq     = E"~@" + expr > (x -> sx(:splice_seq, x))
 tilde        = E"~" + expr > (x -> sx(:splice, x))
 
-expr.matcher = Nullable{ParserCombinator.Matcher}(doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly | macrosymy | dispatchy |
-                                                  sexpr | hashy | curly | bracket | quot | quasi | tildeseq | tilde)
+expr.matcher = doubley | floaty | inty | uchary | achary | chary | stringy | booly | symboly |
+               macrosymy | dispatchy | sexpr | hashy | curly | bracket |
+               quot | quasi | tildeseq | tilde
 
 function read(str)
   x = parse_one(str, expr)
