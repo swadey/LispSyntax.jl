@@ -1,16 +1,16 @@
-language: cpp
-compiler:
-  - clang
+# Documentation: http://docs.travis-ci.com/user/languages/julia/
+language: julia
+os:
+  - linux
+  - osx
+julia:
+  - 1.0
+  - 1.1
+  - 1.2
+  - nightly
+matrix:
+  allow_failures:
+    - julia: nightly
+  fast_finish: true
 notifications:
   email: false
-env:
-  matrix:
-    - JULIAVERSION="juliareleases"
-before_install:
-  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
-  - sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y
-  - sudo apt-get update -qq -y
-  - sudo apt-get install libpcre3-dev julia -y
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-script:
-  - julia --check-bounds=yes -e 'versioninfo(); Pkg.init(); Pkg.clone("https://github.com/saltpork/Stage.jl"); Pkg.clone(pwd()); Pkg.build("LispSyntax"); Pkg.test("LispSyntax")'
