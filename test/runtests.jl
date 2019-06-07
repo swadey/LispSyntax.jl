@@ -5,10 +5,18 @@ using Test
 # Setup
 # ----------------------------------------------------------------------------------------------------------------------
 macro incr(x)
-  quote
-    $(esc(x)) = $(esc(x)) + 1
-    $(esc(x))
-  end
+  esc(quote
+    $x = $x + 1
+    $x
+  end)
+end
+
+macro incr_global(x)
+  esc(quote
+    global $x
+    $x = $x + 1
+    $x
+  end)
 end
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -91,32 +99,33 @@ end
 """) == sx(:defn, :f1, sx(:n), sx(:if, sx(:<, :n, 2), 1, sx(:+, sx(:f1, sx(:-, :n, 1)), sx(:f1, sx(:-, :n, 2)))))
 
 assign_reader_dispatch(:sx, x -> sx(x.vector...))
-assign_reader_dispatch(:hash, x -> [ x.vector[i] => x.vector[i+1] for i = 1:2:length(x.vector) ])
+assign_reader_dispatch(:hash, x -> Dict(x.vector[i] => x.vector[i+1] for i = 1:2:length(x.vector)))
 @test LispSyntax.read("#sx[a b c]") == sx(:a, :b, :c)
 @test LispSyntax.read("#sx [ 1 2 3 ]") == sx(1, 2, 3)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Code generation
 # ----------------------------------------------------------------------------------------------------------------------
-@test codegen(desx(LispSyntax.read("(if true a)"))) == :(true && $(esc(:a)))
-@test codegen(desx(LispSyntax.read("(if true a b)"))) == :(true ? $(esc(:a)) : $(esc(:b)))
+@test codegen(desx(LispSyntax.read("(if true a)"))) == :(true && a)
+@test codegen(desx(LispSyntax.read("(if true a b)"))) == :(true ? a : b)
 
-@test codegen(desx(LispSyntax.read("(call)"))) == :($(esc(:call))())
-@test codegen(desx(LispSyntax.read("(call a)"))) == :($(esc(:call))($(esc(:a))))
-@test codegen(desx(LispSyntax.read("(call a b)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b))))
-@test codegen(desx(LispSyntax.read("(call a b c)"))) == :($(esc(:call))($(esc(:a)), $(esc(:b)), $(esc(:c))))
+@test codegen(desx(LispSyntax.read("(call)"))) == :(call())
+@test codegen(desx(LispSyntax.read("(call a)"))) == :(call(a))
+@test codegen(desx(LispSyntax.read("(call a b)"))) == :(call(a,b))
+@test codegen(desx(LispSyntax.read("(call a b c)"))) == :(call(a,b,c))
 
-@test codegen(desx(LispSyntax.read("(lambda (x) (call x))"))) == Expr(:function, :((x,)), Expr(:block, :($(esc(:call))(x))))
-@test codegen(desx(LispSyntax.read("(def x 3)"))) == :($(esc(:x)) = 3)
-@test codegen(desx(LispSyntax.read("(def x (+ 3 1))"))) == :($(esc(:x)) = $(esc(:+))(3, 1))
+@test codegen(desx(LispSyntax.read("(lambda (x) (call x))"))) == Base.remove_linenums!(:(function (x) call(x) end))
+@test codegen(desx(LispSyntax.read("(def x 3)"))) == :(x = 3)
+@test codegen(desx(LispSyntax.read("(def x (+ 3 1))"))) == :(x = 3 + 1)
 
-@test codegen(desx(LispSyntax.read("test"))) == :($(esc(:test)))
+construct_sexpr = LispSyntax.construct_sexpr
+@test codegen(desx(LispSyntax.read("test"))) == :test
 @test codegen(desx(LispSyntax.read("'test"))) == QuoteNode(:test)
-@test codegen(desx(LispSyntax.read("'(1 2)"))) == :(construct_sexpr(1, 2))
-@test codegen(desx(LispSyntax.read("'(1 x)"))) == :(construct_sexpr(1, :x))
-@test codegen(desx(LispSyntax.read("'(1 (1 2))"))) == :(construct_sexpr(1, construct_sexpr(1, 2)))
-@test codegen(desx(LispSyntax.read("'(1 (test x))"))) == :(construct_sexpr(1, construct_sexpr(:test, :x)))
-@test codegen(desx(LispSyntax.read("(call 1 '2)"))) == :($(esc(:call))(1, 2))
+@test codegen(desx(LispSyntax.read("'(1 2)"))) == :($construct_sexpr(1, 2))
+@test codegen(desx(LispSyntax.read("'(1 x)"))) == :($construct_sexpr(1, :x))
+@test codegen(desx(LispSyntax.read("'(1 (1 2))"))) == :($construct_sexpr(1, $construct_sexpr(1, 2)))
+@test codegen(desx(LispSyntax.read("'(1 (test x))"))) == :($construct_sexpr(1, $construct_sexpr(:test, :x)))
+@test codegen(desx(LispSyntax.read("(call 1 '2)"))) == :(call(1,2))
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Scope and variables
@@ -213,20 +222,22 @@ lisp"(defmacro fapply_trace [f a] (global fcount) (@incr fcount) `(~f ~a))"
 number = 0
 output = 0
 
-lisp"(while (< number 2) (@incr number) (@incr output))"
+lisp"(while (< number 2) (@incr_global number) (@incr_global output))"
 @test number == 2
 @test output == 2
 r = output
-lisp"(for [i (range 1 10)] (@incr r))"
+lisp"(for [i (: 1 10)] (@incr_global r))"
 @test r == 12
 
 r = 0
-lisp"(for [i (range 1 10) j (range 1 10)] (@incr r))"
+lisp"(for [i (: 1 10) j (: 1 10)] (@incr_global r))"
 @test r == 100
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Let and do
 # ----------------------------------------------------------------------------------------------------------------------
+number = 2
+r = 100
 @test lisp"(let [x 10] x)" == 10
 @test lisp"(let [x 10 y 20] (+ x y))" == 30
 @test lisp"(let [x 10 y 20 z 20] (+ x y z))" == 50
@@ -234,7 +245,7 @@ lisp"(for [i (range 1 10) j (range 1 10)] (@incr r))"
 @test lisp"(let [x 10 y 20 z 20 number 10] (+ x y z number))" == 60
 @test lisp"(let [x 10 y 20 z 20] (- (+ x y z number) output))" == 50
 
-lisp"(do (@incr r) (@incr number))"
+lisp"(do (@incr_global r) (@incr_global number))"
 @test number == 3
 @test r == 101
 
