@@ -70,6 +70,36 @@ Notable Differences
    like `@r_str` which in Julia can be called via `r""`, it is
    currently necessary to call these via standard macro syntax:
    `(@r_str "string")`
+   
+REPL Mode
+---------
+In order to avoid having to type out `lisp"( ... )"` for each top level expression,
+one can use [ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl) to make a 
+REPL mode for LispSyntax.jl
+```julia
+julia> using LispSyntax, ReplMaker
+
+julia> initrepl(LispSyntax.lisp_eval_helper, 
+                prompt_text="λ> ", 
+                prompt_color=:red, 
+                start_key=")", 
+                mode_name="Lisp Mode")
+REPL mode Lisp Mode initialized. Press ) to enter and backspace to exit.
+```
+As instructed, if we now press `)` at an empty `julia>` prompt, we enter `Lisp Mode`. 
+```julia
+λ> (defn fib [a] (if (< a 2) a (+ (fib (- a 1)) (fib (- a 2)))))
+fib (generic function with 1 method)
+
+λ> (fib 10)
+55
+```
+to go back to vanilla julia, simply press the backspace button or `Ctr-C`
+```
+julia> fib
+fib (generic function with 1 method)
+
+```
 
 TODO
 ----
