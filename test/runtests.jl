@@ -124,7 +124,6 @@ end
 #-------------------------------------------------------------------------------
 @testset "Scope and variables" begin
     x = 10
-    @test @lisp("x") == 10
     @test lisp"x" == 10
 
     let
@@ -139,34 +138,32 @@ end
 #-------------------------------------------------------------------------------
 @testset "Quoting and splicing" begin
     x = 10
-    @test @lisp("`~x") == 10
     @test lisp"`~x" == 10
     @test lisp"'test" == :test
     @test lisp"'(1 2)" == Any[1, 2]
     @test lisp"'(1 x)" == Any[1, :x]
     @test lisp"'(1 (1 2))" == Any[1, Any[1, 2]]
     @test lisp"'(1 (test x))" == Any[1, Any[:test, :x]]
-    @test @lisp("`(test ~x)") == Any[ :test, 10 ]
     @test lisp"`(test ~x)" == Any[ :test, 10 ]
-    @test @lisp("`(~x ~x)") == Any[ 10, 10 ]
+    @test lisp"`(~x ~x)" == Any[ 10, 10 ]
     global y = Any[ 1, 2 ]
-    @test @lisp("`(~x ~@y)") == Any[ 10, 1, 2 ]
-    @test @lisp("`(~x ~y)") == Any[ 10, Any[1, 2] ]
+    @test lisp"`(~x ~@y)" == Any[ 10, 1, 2 ]
+    @test lisp"`(~x ~y)" == Any[ 10, Any[1, 2] ]
 
-    @test @lisp("`(10 ~(+ 10 x))") == Any[10, 20]
+    @test lisp"`(10 ~(+ 10 x))" == Any[10, 20]
 
     @test lisp"(quote (+ 1 2))" == Any[:+, 1, 2]
 end
 
 #-------------------------------------------------------------------------------
 @testset "Functions" begin
-    @lisp("(defn xxx [a b] (+ a b))")
-    @test @lisp("(xxx 1 2)") == 3
+    lisp"(defn xxx [a b] (+ a b))"
+    @test lisp"(xxx 1 2)" == 3
 
     global z = 10
-    @lisp("(defn yyy [a] (+ a z))")
-    @test @lisp("(yyy 1)") == 11
-    @test @lisp("(yyy z)") == 20
+    lisp"(defn yyy [a] (+ a z))"
+    @test lisp"(yyy 1)" == 11
+    @test lisp"(yyy z)" == 20
 
     # recursion
     lisp"(defn fib [a] (if (< a 2) a (+ (fib (- a 1)) (fib (- a 2)))))"

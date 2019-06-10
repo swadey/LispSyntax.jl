@@ -1,7 +1,7 @@
 module LispSyntax
 
 include("parser.jl")
-export sx, desx, codegen, @lisp, @lisp_str, assign_reader_dispatch
+export sx, desx, codegen, @lisp_str, assign_reader_dispatch
 
 # Internal types
 mutable struct s_expr
@@ -152,10 +152,6 @@ end
 function lisp_eval_helper(str :: AbstractString)
   s = desx(LispSyntax.read(str))
   return codegen(s)
-end
-
-macro lisp(str)
-  return esc(lisp_eval_helper(str))
 end
 
 macro lisp_str(str)
