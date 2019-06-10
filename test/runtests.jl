@@ -252,23 +252,32 @@ end
 
 #-------------------------------------------------------------------------------
 lisp"(import ParserCombinator)"
-@testset "Import" begin
-    @test lisp"(@E_str \"S\")" == E"S"
-end
+@test lisp"(@E_str \"S\")" == E"S"
 
 #-------------------------------------------------------------------------------
-@testset "Bug reports" begin
-    @test lisp"""(def game_map (Dict
-              (=> 'living_room
-                  '((you are in the living room
-                     of a wizards house - there is a wizard
-                     snoring loudly on the couch -)
-                    (west door garden)
-                    (upstairs stairway attic)))))""" ==
-        Dict(:living_room =>
-             Any[ Any[ :you, :are, :in, :the, :living, :room, :of, :a, :wizards, :house, :-,
-                      :there, :is, :a, :wizard, :snoring, :loudly, :on, :the, :couch, :- ],
-                 Any[ :west, :door, :garden ],
-                 Any[ :upstairs, :stairway, :attic ] ])
+@testset "Include from file" begin
+    # Return value is value of last expression
+    @test include_lisp(@__MODULE__, "lisp.clj") == 100
+    # Test objects defined in lisp.clj
+    @test func_in_clj_file(1, 2) == "x = 1; y = 2"
+    @test func_in_clj_file(10, 20) == "x = 10; y = 20"
+    @test some_global === 1.23f0
+    @test !isdefined(@__MODULE__, :not_a_global)
 end
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Bug reports
+# ----------------------------------------------------------------------------------------------------------------------
+@test lisp"""(def game_map (Dict
+          (=> 'living_room
+              '((you are in the living room
+                 of a wizards house - there is a wizard
+                 snoring loudly on the couch -)
+                (west door garden)
+                (upstairs stairway attic)))))""" == Dict(:living_room =>
+                                                         Any[ Any[ :you, :are, :in, :the, :living, :room, :of, :a, :wizards, :house, :-,
+                                                                   :there, :is, :a, :wizard, :snoring, :loudly, :on, :the, :couch, :- ],
+                                                              Any[ :west, :door, :garden ],
+                                                              Any[ :upstairs, :stairway, :attic ] ])
+
 

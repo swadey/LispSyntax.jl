@@ -1,7 +1,7 @@
 module LispSyntax
 
 include("parser.jl")
-export sx, desx, codegen, @lisp_str, assign_reader_dispatch
+export sx, desx, codegen, @lisp_str, assign_reader_dispatch, include_lisp
 
 # Internal types
 mutable struct s_expr
@@ -156,6 +156,29 @@ end
 
 macro lisp_str(str)
   return esc(lisp_eval_helper(str))
+end
+
+
+"""
+    include_lisp(mod, source)
+
+Parse expressions from `source` (which may be an `IO` or file name) and
+evaluate them sequentially as top level code in module `mod`.
+"""
+function include_lisp(mod::Module, filename::AbstractString)
+    open(filename) do io
+        include_lisp(mod, io)
+    end
+end
+
+function include_lisp(mod::Module, io::IO)
+    content = Base.read(io, String)
+    res = nothing
+    for sxpr in parse_one(content, top_level)
+        ex = codegen(desx(sxpr))
+        res = Base.eval(mod, ex)
+    end
+    res
 end
 
 end # module

@@ -37,6 +37,8 @@ expr.matcher = doubley | floaty | inty | uchary | achary | chary | stringy | boo
                macrosymy | dispatchy | sexpr | hashy | curly | bracket |
                quot | quasi | tildeseq | tilde
 
+top_level    = Repeat(~opt_ws + expr) + ~opt_ws + Eos()
+
 function read(str)
   x = parse_one(str, expr)
   x[1]
