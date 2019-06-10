@@ -255,6 +255,17 @@ lisp"(do (@incr_global r) (@incr_global number))"
 lisp"(import ParserCombinator)"
 @test lisp"(@E_str \"S\")" == E"S"
 
+#-------------------------------------------------------------------------------
+@testset "Include from file" begin
+    # Return value is value of last expression
+    @test include_lisp(@__MODULE__, "lisp.clj") == 100
+    # Test objects defined in lisp.clj
+    @test func_in_clj_file(1, 2) == "x = 1; y = 2"
+    @test func_in_clj_file(10, 20) == "x = 10; y = 20"
+    @test some_global === 1.23f0
+    @test !isdefined(@__MODULE__, :not_a_global)
+end
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Bug reports
 # ----------------------------------------------------------------------------------------------------------------------
