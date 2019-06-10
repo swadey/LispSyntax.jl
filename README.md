@@ -4,13 +4,13 @@ LispSyntax.jl: A clojure-like lisp syntax for julia
 [![Join the chat at https://gitter.im/swadey/LispSyntax.jl](https://badges.gitter.im/swadey/LispSyntax.jl.svg)](https://gitter.im/swadey/LispSyntax.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![Build Status](https://travis-ci.org/swadey/LispSyntax.jl.svg?branch=master)
 
-This package provides a julia-to-lisp syntax translator with
-convenience macros that let you do this: 
+This package provides a lisp-to-julia syntax translator with
+convenience macros that let you do this:
 
-```julia 
-lisp"(defn fib [a] (if (< a 2) a (+ (fib (- a 1)) (fib (- a 2)))))" 
-@test lisp"(fib 30)" == 832040 
-@test fib(30)        == 832040 
+```julia
+lisp"(defn fib [a] (if (< a 2) a (+ (fib (- a 1)) (fib (- a 2)))))"
+@test lisp"(fib 30)" == 832040
+@test fib(30)        == 832040
 ```
 
 LispSyntax.jl is implemented as an expression translator between
@@ -57,6 +57,9 @@ Notable Differences
    this may be needed (but a macro-implementation of tail call rewriting may be
    more appropriate for julia).
 - *Optional typing* - Currently not implemented.
+- *Named functions are julia methods* - For efficiency, functions defined with
+  `defn` are translated to normal julia `function` expressions. This means the
+   act as named lambdas in local scope.
 - *Method definition* - Also not currently implemented.  If
    implemented it will probably not be a full implementation of
    Clojure's sophisticated dispatch system.
@@ -65,28 +68,31 @@ Notable Differences
    julia, S-expressions returned from macros require a special
    translation step to generate julia expression trees.  The result is
    that `LispSyntax.jl` macros are directly translated into Julia macros and
-   must be called via special syntax (e.g. `(@macro expr)`).
+   must be called via special syntax (e.g. `(@macro expr)`). Macro hygiene
+   follows the Julia approach of hygenic-by-default with explicit escaping
+   using `esc`. This is the opposite of Clojure's macros which use explicit
+   hygiene with specially named variables.
 - *Julia's string macro dispatch not supported (yet)* - for macros
    like `@r_str` which in Julia can be called via `r""`, it is
    currently necessary to call these via standard macro syntax:
    `(@r_str "string")`
-   
+
 REPL Mode
 ---------
 In order to avoid having to type out `lisp"( ... )"` for each top level expression,
-one can use [ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl) to make a 
+one can use [ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl) to make a
 REPL mode for LispSyntax.jl
 ```julia
 julia> using LispSyntax, ReplMaker
 
-julia> initrepl(LispSyntax.lisp_eval_helper, 
-                prompt_text="λ> ", 
-                prompt_color=:red, 
-                start_key=")", 
+julia> initrepl(LispSyntax.lisp_eval_helper,
+                prompt_text="λ> ",
+                prompt_color=:red,
+                start_key=")",
                 mode_name="Lisp Mode")
 REPL mode Lisp Mode initialized. Press ) to enter and backspace to exit.
 ```
-As instructed, if we now press `)` at an empty `julia>` prompt, we enter `Lisp Mode`. 
+As instructed, if we now press `)` at an empty `julia>` prompt, we enter `Lisp Mode`.
 ```julia
 λ> (defn fib [a] (if (< a 2) a (+ (fib (- a 1)) (fib (- a 2)))))
 fib (generic function with 1 method)

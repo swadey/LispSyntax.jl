@@ -1,7 +1,7 @@
 module LispSyntax
 
 include("parser.jl")
-export sx, desx, codegen, @lisp, @lisp_str, assign_reader_dispatch, include_lisp
+export sx, desx, codegen, @lisp_str, assign_reader_dispatch, include_lisp
 
 # Internal types
 mutable struct s_expr
@@ -72,6 +72,9 @@ function codegen(s)
   elseif isa(s, Set)
     coded_s = [codegen(x) for x in s]
     Expr(:call, Set, Expr(:vect, coded_s...))
+  elseif s isa Expr && s.head == :escape
+    # Special case to allow use of `esc` in lisp syntax macros
+    esc(codegen(s.args[1]))
   elseif !isa(s, Array) # constant
     s
   elseif length(s) == 0 # empty array
@@ -86,7 +89,7 @@ function codegen(s)
     end
   elseif s[1] == :def
     length(s) == 3 || error("Malformed def: Length of list must be == 3")
-    :($(s[2]) = $(codegen(s[3])))
+    :(global $(s[2]) = $(codegen(s[3])))
   elseif s[1] == :let
     bindings = [ :($(s[2][i]) = $(codegen(s[2][i+1]))) for i = 1:2:length(s[2]) ]
     coded_s  = map(codegen, s[3:end])
@@ -117,16 +120,21 @@ function codegen(s)
     coded_s = map(codegen, s[3:end])
     Expr(:function, Expr(:tuple, s[2]...), Expr(:block, coded_s...))
   elseif s[1] == :defn
-    # Note: julia's lambdas are not optimized yet, so we don't define defn as a macro.
-    #       this should be revisited later.
+    # NB: This lowering of `defn` makes a julia function which may be a closure
+    # if used in local scope. This is a semantic mismatch with clojure where
+    # `defn` binds a lambda to a mutable global name. We could do it the
+    # closure way, but it would generate much worse code.
     coded_s = map(codegen, s[4:end])
     Expr(:function, Expr(:call, s[2], s[3]...), Expr(:block, coded_s...))
   elseif s[1] == :defmacro
-     Expr(:macro, Expr(:call, s[2], s[3]...),
-          begin
-            sexpr = Expr(:block, map(codegen, s[4:end])...)
-            Expr(:block, Expr(:call, codegen, sexpr))
-          end)
+    # NB: Clojure macros are unhygenic by default, the opposite of Julia.
+    # Choose Julia semantics and allow the use of `esc` intermixed with lists
+    # (see `Expr(:escape)` handling above).
+    Expr(:macro, Expr(:call, s[2], s[3]...),
+         begin
+             sexpr = Expr(:block, map(codegen, s[4:end])...)
+             Expr(:block, Expr(:call, codegen, sexpr))
+         end)
   elseif s[1] == :defmethod
     # TODO
   else
@@ -144,10 +152,6 @@ end
 function lisp_eval_helper(str :: AbstractString)
   s = desx(LispSyntax.read(str))
   return codegen(s)
-end
-    
-macro lisp(str)
-  return esc(lisp_eval_helper(str))
 end
 
 macro lisp_str(str)
