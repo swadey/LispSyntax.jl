@@ -100,11 +100,42 @@ fib (generic function with 1 method)
 λ> (fib 10)
 55
 ```
-to go back to vanilla julia, simply press the backspace button or `Ctr-C`
+to go back to vanilla julia, simply press the backspace button or `Ctrl-C`
 ```julia
 julia> fib
 fib (generic function with 1 method)
 
+```
+
+If one want to support multi-line s-expressions then you must define 
+a `valid_input_checker` for the REPL mode as follows:
+```julia
+julia> using REPL: REPL, LineEdit; using LispSyntax: ParserCombinator
+
+julia> function valid_sexpr(s)
+         try
+           LispSyntax.read(String(take!(copy(LineEdit.buffer(s)))))
+           true
+         catch err
+           isa(err, ParserCombinator.ParserException) || rethrow(err)
+           false
+         end
+       end
+valid_sexpr (generic function with 1 method)
+
+julia> initrepl(LispSyntax.lisp_eval_helper,
+                valid_input_checker=valid_sexpr,
+                prompt_text="λ> ",
+                prompt_color=:red,
+                start_key=")",
+                mode_name="Lisp Mode")
+REPL mode Lisp Mode initialized. Press ) to enter and backspace to exit.
+
+λ> (defn fib [a] 
+    (if (< a 2) 
+      a 
+      (+ (fib (- a 1)) (fib (- a 2)))))
+fib (generic function with 1 method)
 ```
 
 TODO
