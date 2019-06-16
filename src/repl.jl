@@ -12,12 +12,13 @@ function lisp_reader(s)
     end
 end
 
-function init_repl()
-    ReplMaker.initrepl(lisp_eval_helper,
-                  repl = Base.active_repl,
-                  valid_input_checker = lisp_reader,
-                  prompt_text = "jλ> ",
-                  prompt_color = :yellow,
-                  start_key = ")",
-                  mode_name = "Lisp Mode")
+function init_repl(; prompt_text="jλ> ", prompt_color = :red, start_key = ")", sticky=true)
+	    ReplMaker.initrepl(lisp_eval_helper,
+	                  repl = Base.active_repl,
+	                  valid_input_checker = lisp_reader,
+	                  prompt_text = prompt_text,
+	                  prompt_color = prompt_color,
+	                  start_key = start_key,
+                          sticky_mode=sticky,
+	                  mode_name = "Lisp Mode")
 end
