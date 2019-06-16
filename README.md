@@ -79,64 +79,41 @@ Notable Differences
 
 REPL Mode
 ---------
-In order to avoid having to type out `lisp"( ... )"` for each top level expression,
-one can use [ReplMaker.jl](https://github.com/MasonProtter/ReplMaker.jl) to make a
-REPL mode for LispSyntax.jl
-```julia
-julia> using LispSyntax, ReplMaker
+LispSyntax.jl provides a convenience REPL, alleviating one from having to
+type `lisp"( ... )"` for each top level expression. In order to use REPL
+mode, simply initialize it:
 
-julia> initrepl(LispSyntax.lisp_eval_helper,
-                prompt_text="λ> ",
-                prompt_color=:red,
-                start_key=")",
-                mode_name="Lisp Mode")
+```julia
+julia> using LispSyntax
+julia> LispSyntax.init_repl()
 REPL mode Lisp Mode initialized. Press ) to enter and backspace to exit.
 ```
-As instructed, if we now press `)` at an empty `julia>` prompt, we enter `Lisp Mode`.
-```julia
-λ> (defn fib [a] (if (< a 2) a (+ (fib (- a 1)) (fib (- a 2)))))
-fib (generic function with 1 method)
+At this point, type `)`, and you're ready to Lisp:
 
-λ> (fib 10)
+```clj
+jλ> (* 2 (reduce + (: 1 6)))
+42
+jλ> (defn fib [a] 
+      (if (< a 2) 
+        a 
+        (+ (fib (- a 1)) (fib (- a 2)))))
+fib (generic function with 1 method)
+jλ> (fib 10)
 55
 ```
-to go back to vanilla julia, simply press the backspace button or `Ctrl-C`
+
+To return to the Julia prompt, simply type the backspace type or 
+`Ctrl-C`. Once there, you'll still have access to the fuctions you 
+defined:
 ```julia
 julia> fib
 fib (generic function with 1 method)
-
+julia> fib(10)
+55
 ```
 
-If one want to support multi-line s-expressions then you must define 
-a `valid_input_checker` for the REPL mode as follows:
-```julia
-julia> using REPL: REPL, LineEdit; using LispSyntax: ParserCombinator
+You may also create a [customized REPL](docs/repl-mode.md).
 
-julia> function valid_sexpr(s)
-         try
-           LispSyntax.read(String(take!(copy(LineEdit.buffer(s)))))
-           true
-         catch err
-           isa(err, ParserCombinator.ParserException) || rethrow(err)
-           false
-         end
-       end
-valid_sexpr (generic function with 1 method)
-
-julia> initrepl(LispSyntax.lisp_eval_helper,
-                valid_input_checker=valid_sexpr,
-                prompt_text="λ> ",
-                prompt_color=:red,
-                start_key=")",
-                mode_name="Lisp Mode")
-REPL mode Lisp Mode initialized. Press ) to enter and backspace to exit.
-
-λ> (defn fib [a] 
-    (if (< a 2) 
-      a 
-      (+ (fib (- a 1)) (fib (- a 2)))))
-fib (generic function with 1 method)
-```
 
 TODO
 ----

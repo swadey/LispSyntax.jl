@@ -181,4 +181,6 @@ function include_lisp(mod::Module, io::IO)
     res
 end
 
+include("repl.jl")
+
 end # module
