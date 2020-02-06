@@ -8,8 +8,9 @@ REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 ReplMaker = "b873ce64-0db9-51f5-a568-4457d8e49576"
 
 [compat]
-ParserCombinator = "≥ 2.0.0"
-julia = "≥ 1.0.0"
+ParserCombinator = "2"
+julia = "1"
+ReplMaker = "0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
